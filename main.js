@@ -125,12 +125,15 @@ function hideWindow() {
 }
 
 // ---------- значок в трее ----------
+let trayPlaying = false;
+function isPlaying() { return !!core && Object.values(core.snapshot().runtime || {}).some((r) => r && r.state === 'playing'); }
 function updateTrayMenu() {
   if (!tray) return;
   const visible = trayProvider.status === 'visible';
+  trayPlaying = isPlaying();
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: visible ? 'Спрятать окно' : 'Открыть PolyPlayer', click: () => (visible ? hideWindow() : showWindow()) },
-    { label: 'Стоп всё (плавно)', click: () => core.command({ cmd: 'stopAll' }) },
+    { label: 'Стоп всё (плавно)', enabled: trayPlaying, click: () => core.command({ cmd: 'stopAll' }) },
     { type: 'separator' },
     { label: 'Выйти', click: quitApp }
   ]));
@@ -163,14 +166,16 @@ function applyAutostart() {
 }
 
 // ---------- обновления через GitHub Releases ----------
-// Программа сама проверяет новую версию (при запуске и каждые 6 часов) и скачивает её в фоне.
-// Устанавливается только по кнопке в «Настройках» и только когда музыка не играет.
+// При запуске программа проверяет, вышла ли новая версия (ничего не скачивая), и сообщает об этом в окне.
+// Пользователь соглашается — установщик скачивается (видно, сколько скачано), потом окно «нужно перезапустить».
+// Установка — только когда музыка не играет. Проверить вручную можно в «Настройках».
 const UPDATE_REPO = process.env.POLYPLAYER_UPDATE_REPO || (() => { try { return require('./package.json').updateRepo || ''; } catch (e) { return ''; } })();
 const UPDATE_API = process.env.POLYPLAYER_UPDATE_API || 'https://api.github.com'; // для тестов
-const upd = { current: app.getVersion(), status: UPDATE_REPO ? 'idle' : 'off', version: '', progress: 0, error: '', file: '', checkedAt: '', notes: '', url: '', dismissed: '' };
-let updBusy = false;
-const updPublic = () => ({ current: upd.current, status: upd.status, version: upd.version, progress: upd.progress, error: upd.error, checkedAt: upd.checkedAt, notes: upd.notes, url: upd.url, dismissed: upd.dismissed });
 const RELEASES_URL = UPDATE_REPO ? 'https://github.com/' + UPDATE_REPO + '/releases' : '';
+// status: off | idle | checking | latest | available | downloading | ready | error
+const upd = { current: app.getVersion(), status: UPDATE_REPO ? 'idle' : 'off', version: '', progress: 0, got: 0, total: 0, error: '', file: '', checkedAt: '', notes: '', url: '', dismissed: '', asset: null };
+let updChecking = false, updDownloading = false;
+const updPublic = () => ({ current: upd.current, status: upd.status, version: upd.version, progress: upd.progress, got: upd.got, total: upd.total, error: upd.error, checkedAt: upd.checkedAt, notes: upd.notes, url: upd.url, dismissed: upd.dismissed });
 function updSet(patch) { Object.assign(upd, patch); if (core) core.setUpdate(updPublic()); }
 function newer(a, b) { // a > b ?
   const pa = String(a).replace(/^v/, '').split('.').map((x) => parseInt(x, 10) || 0);
@@ -178,10 +183,12 @@ function newer(a, b) { // a > b ?
   for (let i = 0; i < 3; i++) { if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) > (pb[i] || 0); }
   return false;
 }
+const updDir = () => path.join(app.getPath('userData'), 'updates');
+
 async function checkForUpdate(manual) {
-  if (!UPDATE_REPO || updBusy) return;
-  if (upd.status === 'ready') { if (manual) updSet({}); return; }
-  updBusy = true;
+  if (!UPDATE_REPO || updChecking || updDownloading || upd.status === 'ready') { if (manual) updSet({}); return; }
+  updChecking = true;
+  const before = upd.status;
   if (manual) updSet({ status: 'checking', error: '' });
   try {
     const r = await net.fetch(UPDATE_API + '/repos/' + UPDATE_REPO + '/releases/latest', { headers: { 'User-Agent': 'PolyPlayer', Accept: 'application/vnd.github+json' } });
@@ -192,46 +199,56 @@ async function checkForUpdate(manual) {
     const ver = String(rel.tag_name || '').replace(/^v/, '');
     const asset = (rel.assets || []).find((a) => /^PolyPlayer-Setup-.*\.exe$/i.test(a.name));
     if (!ver || !asset || !newer(ver, upd.current)) {
-      // «Что нового» — описание установленной версии
-      updSet({ status: 'latest', version: '', error: '', checkedAt: now, url: RELEASES_URL + '/tag/v' + upd.current });
+      updSet({ status: 'latest', version: '', error: '', checkedAt: now, url: RELEASES_URL + '/tag/v' + upd.current }); // «Что нового» — про установленную версию
       return;
     }
-    upd.checkedAt = now; upd.notes = String(rel.body || ''); upd.url = rel.html_url || (RELEASES_URL + '/tag/v' + ver);
-    core.log('Update available: ' + ver);
-    const dir = path.join(app.getPath('userData'), 'updates');
-    fs.mkdirSync(dir, { recursive: true });
-    const file = path.join(dir, asset.name);
-    if (fs.existsSync(file) && fs.statSync(file).size === asset.size) { updSet({ status: 'ready', version: ver, file, progress: 100 }); return; }
-    updSet({ status: 'downloading', version: ver, progress: 0 });
+    const file = path.join(updDir(), asset.name);
+    const already = fs.existsSync(file) && fs.statSync(file).size === asset.size;
+    if (ver !== upd.version) upd.dismissed = '';
+    core.log('Update available: ' + ver + (already ? ' (already downloaded)' : ''));
+    updSet({ status: already ? 'ready' : 'available', version: ver, asset, file, total: asset.size, got: already ? asset.size : 0, progress: already ? 100 : 0, error: '', checkedAt: now, notes: String(rel.body || ''), url: rel.html_url || (RELEASES_URL + '/tag/v' + ver) });
+  } catch (e) {
+    core.log('Update check failed: ' + e.message);
+    updSet({ status: manual ? 'error' : (before === 'checking' ? 'idle' : before), error: manual ? e.message : '', checkedAt: new Date().toISOString() });
+  } finally { updChecking = false; }
+}
+
+async function downloadUpdate() {
+  if (updDownloading || upd.status !== 'available' || !upd.asset) return;
+  updDownloading = true;
+  const asset = upd.asset, file = upd.file;
+  updSet({ status: 'downloading', got: 0, total: asset.size, progress: 0, error: '' });
+  core.log('Downloading update ' + upd.version);
+  try {
+    fs.mkdirSync(updDir(), { recursive: true });
     const d = await net.fetch(asset.browser_download_url, { headers: { 'User-Agent': 'PolyPlayer' } });
     if (!d.ok || !d.body) throw new Error('загрузка не удалась (' + d.status + ')');
     const tmp = file + '.part';
     const out = fs.createWriteStream(tmp);
     const reader = d.body.getReader();
-    let got = 0, lastPct = -1;
+    let got = 0, lastSent = 0;
     for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
       got += value.length;
       if (!out.write(Buffer.from(value))) await new Promise((res) => out.once('drain', res));
-      const pct = Math.floor(got * 100 / (asset.size || 1));
-      if (pct !== lastPct && pct % 5 === 0) { lastPct = pct; updSet({ progress: pct }); }
+      if (Date.now() - lastSent > 400) { lastSent = Date.now(); updSet({ got, progress: Math.floor(got * 100 / (asset.size || 1)) }); }
     }
     await new Promise((res, rej) => out.end((e) => (e ? rej(e) : res())));
     if (asset.size && fs.statSync(tmp).size !== asset.size) throw new Error('файл скачался не полностью');
     fs.renameSync(tmp, file);
-    for (const f of fs.readdirSync(dir)) if (f !== asset.name) { try { fs.unlinkSync(path.join(dir, f)); } catch (e) { /* ignore */ } }
-    core.log('Update ' + ver + ' downloaded');
-    updSet({ status: 'ready', version: ver, file, progress: 100 });
+    for (const f of fs.readdirSync(updDir())) if (f !== asset.name) { try { fs.unlinkSync(path.join(updDir(), f)); } catch (e) { /* ignore */ } }
+    core.log('Update ' + upd.version + ' downloaded');
+    updSet({ status: 'ready', got: asset.size, progress: 100 });
   } catch (e) {
-    core.log('Update check failed: ' + e.message);
-    updSet({ status: manual || upd.status === 'downloading' ? 'error' : 'idle', error: manual || upd.status === 'downloading' ? e.message : '', checkedAt: new Date().toISOString() });
-  } finally { updBusy = false; }
+    core.log('Update download failed: ' + e.message);
+    updSet({ status: 'available', error: 'не удалось скачать: ' + e.message, got: 0, progress: 0 });
+  } finally { updDownloading = false; }
 }
+
 function installUpdate() {
   if (upd.status !== 'ready' || !upd.file || !fs.existsSync(upd.file)) return;
-  const playing = Object.values(core.snapshot().runtime || {}).some((r) => r && r.state === 'playing');
-  if (playing) { core.log('Update install refused: music is playing'); return; }
+  if (isPlaying()) { core.log('Update install refused: music is playing'); return; }
   core.log('Installing update ' + upd.version);
   try {
     // тихая установка: установщик закроет программу, обновит файлы и сам запустит её снова
@@ -240,6 +257,27 @@ function installUpdate() {
   } catch (e) { updSet({ status: 'error', error: e.message }); return; }
   quitting = true;
   setTimeout(async () => { try { await core.stop(); } catch (e) { /* ignore */ } app.quit(); }, 300);
+}
+
+// ---------- плагин Stream Deck: ставим или обновляем вместе с программой ----------
+// Плагин лежит внутри программы. Если на компьютере есть Stream Deck, а плагин не стоит или он старее программы,
+// программа один раз (для каждой версии) открывает файл плагина — Stream Deck ставит его поверх старого.
+function offerStreamDeckPlugin() {
+  try {
+    if (!app.isPackaged || process.platform !== 'win32') return;
+    const bundled = path.join(process.resourcesPath, 'PolyPlayer.streamDeckPlugin');
+    const sdRoot = path.join(app.getPath('appData'), 'Elgato', 'StreamDeck');
+    if (!fs.existsSync(bundled) || !fs.existsSync(sdRoot)) return; // Stream Deck не установлен
+    let installed = '';
+    try { installed = JSON.parse(fs.readFileSync(path.join(sdRoot, 'Plugins', 'com.polyplayer.deck.sdPlugin', 'manifest.json'), 'utf8')).Version || ''; } catch (e) { /* не стоит */ }
+    if (installed && !newer(app.getVersion(), installed)) return; // уже свежий
+    const mark = path.join(core.dataDir, 'plugin-offered.txt');
+    let offered = ''; try { offered = fs.readFileSync(mark, 'utf8').trim(); } catch (e) { /* ignore */ }
+    if (offered === app.getVersion()) return; // уже предлагали для этой версии
+    fs.writeFileSync(mark, app.getVersion());
+    core.log('Stream Deck plugin ' + (installed || 'not installed') + ' → opening bundled ' + app.getVersion());
+    shell.openPath(bundled).then((err) => { if (err) core.log('Plugin open error: ' + err); });
+  } catch (e) { core.log('Plugin offer error: ' + e.message); }
 }
 
 // ---------- перенос настроек из старой версии (SWP Player) ----------
@@ -291,15 +329,19 @@ app.whenReady().then(async () => {
   createTray();
   createWindow(!START_HIDDEN);
   applyAutostart();
-  core.on('change', (kind) => { if (kind === 'config') applyAutostart(); });
+  core.on('change', (kind) => {
+    if (kind === 'config') applyAutostart();
+    if (kind === 'runtime' && isPlaying() !== trayPlaying) updateTrayMenu(); // «Стоп всё» в меню — только когда что-то играет
+  });
   core.on('updateCmd', (cmd) => {
     if (cmd === 'install') installUpdate();
-    else if (cmd === 'later') updSet({ dismissed: upd.version }); // окно об обновлении больше не показываем до следующего запуска
+    else if (cmd === 'download') downloadUpdate();
+    else if (cmd === 'later') updSet({ dismissed: upd.version }); // окно «вышла версия» больше не показываем до следующего запуска
     else checkForUpdate(true);
   });
   core.setUpdate(updPublic());
-  setTimeout(() => checkForUpdate(false), process.env.POLYPLAYER_UPDATE_API ? 1500 : 5000);
-  setInterval(() => checkForUpdate(false), 6 * 3600 * 1000);
+  setTimeout(() => checkForUpdate(false), process.env.POLYPLAYER_UPDATE_API ? 1500 : 3000);
+  setTimeout(offerStreamDeckPlugin, 4000);
   powerMonitor.on('resume', () => {
     core.log('System resumed');
     setTimeout(() => { if (win && !win.isDestroyed() && win.webContents.isCrashed()) win.reload(); }, 2000);

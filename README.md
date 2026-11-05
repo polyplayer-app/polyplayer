@@ -10,9 +10,13 @@
 
 ## Установка
 
-1. Скачайте из раздела [Releases](../../releases/latest) файл `PolyPlayer-Setup-….exe` и запустите его.
-   Windows может показать «Windows защитил ваш компьютер» — нажмите «Подробнее» → «Выполнить в любом случае».
-2. Для Stream Deck скачайте там же `PolyPlayer.streamDeckPlugin` и откройте его двойным кликом.
+**[Скачать PolyPlayer для Windows](https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer-Setup.exe)** — ссылка всегда ведёт на последнюю версию.
+
+1. Запустите скачанный файл. Если Windows покажет «Windows защитил ваш компьютер» — нажмите «Подробнее» → «Выполнить в любом случае».
+2. Если на компьютере есть Stream Deck, после первого запуска PolyPlayer предложит установить плагин для пульта (он внутри установщика).
+3. Дальше программа обновляется сама.
+
+Страница для скачивания: https://polyplayer-app.github.io/polyplayer/
 
 Потоки и расписание хранятся в `%APPDATA%\PolyPlayer`.
 

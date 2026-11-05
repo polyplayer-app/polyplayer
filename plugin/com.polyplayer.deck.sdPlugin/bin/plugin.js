@@ -309,6 +309,20 @@ function nextKeySvg(stream) {
   return svgUri(svg);
 }
 
+// «Стоп всё»: как «След. трек» — крупный значок сверху, подпись снизу; активна, только когда что-то играет
+function stopKeySvg(anyOn) {
+  const bg = anyOn ? '#1E2A44' : '#262626';
+  const col = anyOn ? '#FF6A4D' : '#5A5A5A';
+  const ink = anyOn ? '#F2E6CC' : '#8E8E8E';
+  let svg = '<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144">';
+  svg += '<rect width="144" height="144" fill="' + bg + '"/>';
+  svg += '<rect width="144" height="10" fill="' + col + '"/>';
+  svg += '<rect x="48" y="28" width="48" height="48" rx="7" fill="' + col + '"/>';
+  svg += textBlock(['СТОП', 'ВСЁ'], 72, 86, 136, 128, 24, ink);
+  svg += '</svg>';
+  return svgUri(svg);
+}
+
 function iconSvg(state, color) {
   return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">' + glyph(state, 10, 10, 28, color) + '</svg>');
 }
@@ -366,7 +380,7 @@ function render(context) {
     }
   } else if (c.action === A.stopall) {
     const anyOn = Object.values(snap.runtime).some((r) => r && r.state === 'playing');
-    setOnce(c, 'img', { event: 'setImage', context, payload: { image: simpleKeySvg(['СТОП', 'ВСЁ'], '', '#E85D2E', anyOn), target: 0 } });
+    setOnce(c, 'img', { event: 'setImage', context, payload: { image: stopKeySvg(anyOn), target: 0 } });
   } else if (c.action === A.next) {
     const one = singlePlaying(snap);
     setOnce(c, 'img', { event: 'setImage', context, payload: { image: nextKeySvg(one), target: 0 } });
@@ -436,7 +450,8 @@ function onMessage(msg) {
         else if (s && held >= HOLD_MS) app.command({ cmd: 'stop', id: s.id });
         else toggleStream(c, context);
       } else if (c.action === A.stopall) {
-        app.command({ cmd: 'stopAll' });
+        const snapNow = app.snapshot();
+        if (Object.values(snapNow.runtime).some((r) => r && r.state === 'playing')) app.command({ cmd: 'stopAll' }); // ничего не играет — кнопка неактивна
       } else if (c.action === A.next) {
         const one = singlePlaying(app.snapshot());
         if (one) app.command({ cmd: 'next', id: one.id }); else send({ event: 'showAlert', context });

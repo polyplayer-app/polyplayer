@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PolyPlayer</title>
+<meta name="description" content="PolyPlayer — фоновая музыка в несколько потоков для Windows: расписание и пульт Stream Deck.">
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+@font-face { font-family: Inter; src: url(Inter-cyrillic.woff2) format('woff2'); font-weight: 100 900; unicode-range: U+0400-04FF; }
+@font-face { font-family: Inter; src: url(Inter-latin.woff2) format('woff2'); font-weight: 100 900; }
+:root { --bg: #16171B; --s1: #1E2026; --line: rgba(255,255,255,.08); --tx: #ECEDEF; --mu: #9A9DA6; --acc: #FF6A4D; --grad: linear-gradient(135deg, #FF9A5C, #F0484E); }
+* { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(900px 420px at 50% -10%, rgba(255,106,77,.16), transparent 60%), var(--bg); color: var(--tx); font: 16px/1.55 Inter, "Segoe UI", system-ui, sans-serif; min-height: 100vh; }
+main { max-width: 720px; margin: 0 auto; padding: 64px 16px 48px; }
+.hero { text-align: center; }
+.hero img { width: 112px; height: 112px; border-radius: 26px; box-shadow: 0 24px 60px -24px rgba(255,106,77,.55); }
+h1 { font-size: 40px; letter-spacing: -.02em; margin: 22px 0 8px; }
+.lead { color: var(--mu); font-size: 18px; margin: 0 auto 30px; max-width: 520px; }
+.dl { display: inline-flex; align-items: center; gap: 10px; background: var(--grad); color: #fff; text-decoration: none; font-weight: 700; font-size: 18px; padding: 16px 30px; border-radius: 14px; box-shadow: 0 14px 34px -14px var(--acc); }
+.dl:hover { filter: brightness(1.06); }
+.dl svg { width: 20px; height: 20px; }
+.ver { color: var(--mu); font-size: 14px; margin-top: 14px; min-height: 22px; }
+.ver a { color: var(--mu); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 48px 0 32px; }
+.card { background: var(--s1); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; }
+.card b { display: block; margin-bottom: 4px; }
+.card span { color: var(--mu); font-size: 14px; }
+h2 { font-size: 20px; margin: 32px 0 10px; }
+ol { padding-left: 22px; color: #D5D7DB; } li { margin: 6px 0; }
+.small { color: var(--mu); font-size: 14px; }
+.small a, ol a { color: var(--tx); }
+footer { text-align: center; color: var(--mu); font-size: 13px; margin-top: 48px; }
+footer a { color: var(--mu); }
+</style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <img src="icon.png" alt="">
+    <h1>PolyPlayer</h1>
+    <p class="lead">Фоновая музыка в несколько потоков для Windows — с расписанием и управлением с пульта Stream Deck.</p>
+    <a class="dl" id="dl" href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer-Setup.exe">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>
+      Скачать PolyPlayer
+    </a>
+    <div class="ver" id="ver">Для Windows 10 и 11</div>
+  </section>
+
+  <div class="cards">
+    <div class="card"><b>Несколько потоков</b><span>Папки с музыкой, плавное включение, затухание и переходы между треками.</span></div>
+    <div class="card"><b>Расписание</b><span>Включить и выключить музыку в нужное время по дням недели.</span></div>
+    <div class="card"><b>Пульт Stream Deck</b><span>Каждый поток — на своей кнопке. Плагин ставится вместе с программой.</span></div>
+  </div>
+
+  <h2>Установка</h2>
+  <ol>
+    <li>Нажмите «Скачать PolyPlayer» и запустите скачанный файл.</li>
+    <li>Если Windows покажет «Windows защитил ваш компьютер», нажмите «Подробнее» → «Выполнить в любом случае».</li>
+    <li>Если на компьютере есть программа Stream Deck, после первого запуска PolyPlayer предложит установить плагин для пульта.</li>
+  </ol>
+  <p class="small">Дальше PolyPlayer обновляется сам: при запуске он сообщает о новой версии и предлагает её установить. Отдельно плагин для Stream Deck: <a id="plg" href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer.streamDeckPlugin">PolyPlayer.streamDeckPlugin</a>.</p>
+
+  <footer>Открытый исходный код · <a href="https://github.com/polyplayer-app/polyplayer">GitHub</a> · лицензия GPL v3</footer>
+</main>
+<script>
+// версия и дата последнего выпуска — с GitHub
+fetch('https://api.github.com/repos/polyplayer-app/polyplayer/releases/latest').then((r) => r.ok ? r.json() : null).then((rel) => {
+  if (!rel || !rel.tag_name) return;
+  const d = new Date(rel.published_at);
+  const date = isNaN(d) ? '' : d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).replace(/\s*г\.?$/, '');
+  document.getElementById('ver').innerHTML = 'Версия ' + rel.tag_name.replace(/^v/, '') + (date ? ' от ' + date : '') + ' · Windows 10 и 11 · <a href="' + rel.html_url + '">что нового</a>';
+}).catch(() => {});
+</script>
+</body>
+</html>

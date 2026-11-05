@@ -153,6 +153,7 @@ input.seek:disabled { cursor: default; }
 .set.upd { cursor: default; }
 .btn2.go { background: var(--acc-grad); border-color: transparent; color: #fff; }
 .primary:disabled { opacity: .45; box-shadow: none; cursor: default; }
+.danger:disabled { opacity: .35; cursor: default; }
 .btn2.lnk { color: var(--tx); text-decoration: none; }
 .help-head .hv { display: block; font-size: 12px; font-weight: 500; color: var(--mu); margin-top: 2px; }
 .upd-dlg { width: min(560px, calc(100vw - 32px)); }
@@ -160,6 +161,9 @@ input.seek:disabled { cursor: default; }
 .upd-notes ul { padding-left: 18px; margin: 8px 0; } .upd-notes li { margin: 3px 0; } .upd-notes p { margin: 10px 0; }
 .upd-notes code { background: var(--s3); padding: 1px 5px; border-radius: 5px; font-size: 12.5px; }
 .upd-hint { font-size: 12.5px; color: var(--mu); margin: 12px 0 0; }
+.bar { height: 6px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; margin-top: 8px; }
+.bar i { display: block; height: 100%; width: 0; background: var(--acc-grad); border-radius: 6px; transition: width .3s; }
+.upd-prog { margin-top: 4px; } .upd-prog .bar { height: 8px; }
 .upd-dlg a { color: var(--mu); font-size: 12.5px; }
 .updot { width: 7px; height: 7px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 8px var(--acc); }
 .set[hidden] { display: none; }
@@ -266,7 +270,7 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
       <span class="switch"><input type="checkbox" id="soloAll"><span></span></span>
     </label>
     <div class="set upd" id="updBox">
-      <div class="txt"><b id="updHead">Версия —</b><small id="updText"></small></div>
+      <div class="txt"><b id="updHead">Версия —</b><small id="updText"></small><div class="bar" id="updBar" hidden><i id="updBarFill"></i></div></div>
       <a class="btn2 lnk" id="updNews" href="#" target="_blank" hidden>Что нового</a>
       <button class="btn2" id="updBtn" type="button">Проверить обновления</button>
     </div>
@@ -277,6 +281,7 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
   <div class="dlg">
     <h2 id="updDlgTitle">Вышла новая версия</h2>
     <div class="upd-notes" id="updDlgNotes"></div>
+    <div class="upd-prog" id="updDlgProg" hidden><div class="bar"><i id="updDlgBarFill"></i></div><div class="upd-hint" id="updDlgProgText"></div></div>
     <p class="upd-hint" id="updDlgHint"></p>
     <div class="dlg-foot">
       <a id="updDlgLink" href="#" target="_blank">Подробнее на GitHub</a>
@@ -312,7 +317,7 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
 
     <h3>2. Включайте музыку</h3>
     <p>На карточке потока: <b>▶</b> — включить или пауза, <b>⏭</b> — следующий трек, <b>■</b> — остановить этот поток. <b>Пауза</b> потом продолжит с того же места, а после <b>остановки</b> поток в следующий раз начнётся с начала. Полоса над кнопками показывает, где сейчас трек: по ней можно щёлкнуть или потянуть, чтобы перемотать.</p>
-    <p>Кнопка <b>«Стоп всё»</b> вверху окна плавно выключает всю музыку сразу.</p>
+    <p>Кнопка <b>«Стоп всё»</b> вверху окна плавно выключает всю музыку сразу. Она активна, только когда что-то играет.</p>
     <p>Громкость потока — ползунок на его карточке, программа её запоминает. Общую громкость регулируйте на звуковой карте, микшере или значком динамика возле часов.</p>
     <p>Обычно одновременно играет один поток: например, включили «Плейлист 2», пока играл «Плейлист 1», — первый сам плавно затихнет. Если нужно, чтобы потоки звучали вместе, выключите это во вкладке «Настройки».</p>
 
@@ -333,14 +338,14 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
       <li><b>Крестик</b> в углу окна не выключает программу: окно прячется в значок возле часов (в правом нижнем углу экрана), музыка продолжает играть. Если значка не видно, нажмите стрелку <b>˄</b> рядом с часами — там спрятанные значки. Открыть окно снова — щелчок по этому значку или по ярлыку PolyPlayer на рабочем столе.</li>
       <li><b>Выйти совсем</b> — правый клик по значку возле часов → «Выйти». Музыка плавно затихнет.</li>
       <li><b>Запуск вместе с компьютером</b> (включён во вкладке «Настройки») — после включения компьютера программа запустится сама и спрячется в значок возле часов.</li>
-      <li><b>Обновления</b> — при каждом запуске PolyPlayer проверяет, вышла ли новая версия, и скачивает её. Затем появляется окно с описанием новой версии и кнопками «Обновить сейчас» и «Позже». Обновиться можно и потом — во вкладке «Настройки». Пока играет музыка, обновить нельзя. После нажатия программа закроется на несколько секунд и откроется снова; потоки и расписание сохранятся.</li>
+      <li><b>Обновления</b> — при запуске PolyPlayer проверяет, вышла ли новая версия. Если вышла, появляется окно с описанием и кнопками «Скачать и обновить» и «Позже». Во время загрузки видно, сколько уже скачано. Когда всё готово, программа попросит перезапуска — это займёт несколько секунд, потоки и расписание сохранятся. Пока играет музыка, перезапуск не предлагается. Если нажали «Позже», обновиться можно во вкладке «Настройки»; там же кнопка «Проверить обновления».</li>
     </ul>
 
     <h3>5. Пульт Stream Deck</h3>
     <p>Пульт — это кнопки с экранчиками. Каждой кнопке можно назначить поток и включать музыку, не подходя к компьютеру.</p>
     <p><b>Как добавить кнопку:</b></p>
     <ol>
-      <li>Установите плагин: двойной клик по файлу <b>PolyPlayer.streamDeckPlugin</b>.</li>
+      <li>Плагин для Stream Deck ставится вместе с программой: после первого запуска (и после обновлений) PolyPlayer сам откроет его, а Stream Deck установит. Если этого не произошло — скачайте файл <b>PolyPlayer.streamDeckPlugin</b> со страницы программы и откройте его двойным кликом.</li>
       <li>Откройте программу <b>Stream Deck</b> (её значок тоже возле часов) и найдите в списке справа раздел <b>PolyPlayer</b>.</li>
       <li>Перетащите мышкой действие <b>«Поток»</b> на свободную кнопку.</li>
       <li>Дальше всё делается на самом пульте. Кнопка покажет первый поток и подскажет:<br>
@@ -355,7 +360,7 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
     </ul>
     <p><b>Другие кнопки</b> из раздела PolyPlayer:</p>
     <ul>
-      <li><b>Стоп всё</b> — плавно выключает всю музыку. Подсвечена, когда что-то играет.</li>
+      <li><b>Стоп всё</b> — плавно выключает всю музыку. Активна и подсвечена, только когда что-то играет.</li>
       <li><b>Следующий трек</b> — следующий трек в том потоке, который сейчас играет. Работает, когда играет ровно один поток, иначе кнопка серая.</li>
       <li><b>PolyPlayer</b> — показывает состояние программы: серая — закрыта (нажатие откроет), тёмная — спрятана к часам (нажатие покажет окно), коралловая — окно открыто (нажатие спрячет).</li>
     </ul>
@@ -1020,6 +1025,7 @@ function makeCard(s) {
 }
 
 function renderStreams() {
+  const sa = $('#stopAll'); if (sa) sa.disabled = !anyPlaying(); // «Стоп всё» активна, только когда что-то играет
   const box = $('#streams');
   let add = $('#addStream');
   if (!add) {
@@ -1205,56 +1211,109 @@ function mdLite(text) {
   }
   return html + (inList ? '</ul>' : '');
 }
+const mb = (b) => (Math.round((b || 0) / 1048576 * 10) / 10).toLocaleString('ru-RU') + ' МБ';
+function progressText(u) { return 'скачано ' + mb(u.got) + ' из ' + mb(u.total) + ' (' + (u.progress || 0) + '%)'; }
 function renderUpdate() {
   const hv = $('#helpVer'); if (hv) hv.textContent = versionLine();
   const box = $('#updBox'); if (!box) return;
   const u = update;
   box.hidden = !u && !about;
-  const btn = $('#updBtn'), txt = $('#updText'), news = $('#updNews');
-  const head = versionLine().replace(/^PolyPlayer /, 'Версия ') || 'Версия —';
-  let t = '';
+  const btn = $('#updBtn'), txt = $('#updText'), news = $('#updNews'), bar = $('#updBar');
+  $('#updHead').textContent = versionLine().replace(/^PolyPlayer /, 'Версия ') || 'Версия —';
   btn.hidden = false; btn.disabled = false; btn.textContent = 'Проверить обновления'; btn.dataset.cmd = 'check'; btn.classList.remove('go');
   news.hidden = !(u && u.url);
   if (u && u.url) news.href = u.url;
+  bar.hidden = true;
   const checked = u && u.checkedAt ? 'Последняя проверка обновлений: ' + fmtCheck(u.checkedAt) : '';
+  let t = '';
   if (!u || u.status === 'off') { t = 'Обновления не настроены.'; btn.hidden = true; }
   else if (u.status === 'checking') { t = 'Проверяю обновления…'; btn.disabled = true; }
-  else if (u.status === 'downloading') { t = 'Скачиваю версию ' + u.version + '… ' + (u.progress || 0) + '%'; btn.disabled = true; }
-  else if (u.status === 'ready') {
-    t = 'Готова новая версия ' + u.version + '.';
-    btn.textContent = 'Установить ' + u.version; btn.dataset.cmd = 'install'; btn.classList.add('go');
-    if (anyPlaying()) { btn.disabled = true; t += ' Остановите музыку, чтобы установить.'; }
-    else t += ' Программа закроется на несколько секунд и откроется снова.';
+  else if (u.status === 'available') {
+    t = 'Доступна новая версия ' + u.version + '.' + (u.error ? ' Последняя попытка: ' + u.error + '.' : '');
+    btn.textContent = 'Скачать и обновить'; btn.dataset.cmd = 'download'; btn.classList.add('go');
+  } else if (u.status === 'downloading') {
+    t = 'Скачиваю версию ' + u.version + ': ' + progressText(u) + '.';
+    btn.disabled = true; btn.textContent = 'Скачиваю…'; bar.hidden = false; $('#updBarFill').style.width = (u.progress || 0) + '%';
+  } else if (u.status === 'ready') {
+    t = 'Версия ' + u.version + ' скачана. Чтобы установить её, программу нужно перезапустить.';
+    btn.textContent = 'Перезапустить и обновить'; btn.dataset.cmd = 'install'; btn.classList.add('go');
+    if (anyPlaying()) { btn.disabled = true; t += ' Это можно сделать, когда музыка не играет.'; }
   } else if (u.status === 'error') t = (checked ? checked + ' — ' : '') + 'не удалось проверить' + (u.error ? ' (' + u.error + ')' : '') + '.';
   else if (u.status === 'latest') t = checked + ' — у вас последняя версия.';
-  else t = checked ? checked + '.' : 'Проверка обновлений — при запуске программы.';
-  $('#updHead').textContent = head;
+  else t = checked ? checked + '.' : 'Обновления проверяются при запуске программы.';
   txt.textContent = t;
   const dot = document.querySelector('#tabs button[data-tab="settings"] .updot');
-  if (dot) dot.hidden = !(u && u.status === 'ready');
-  maybeShowUpdateDialog();
+  if (dot) dot.hidden = !(u && (u.status === 'available' || u.status === 'ready'));
+  updateDialog();
 }
-$('#updBtn').onclick = () => send({ t: 'updateCmd', cmd: $('#updBtn').dataset.cmd || 'check' });
+$('#updBtn').onclick = () => {
+  const c = $('#updBtn').dataset.cmd || 'check';
+  if (c === 'download') dlgFollow = true; // после скачивания сразу покажем окно о перезапуске
+  send({ t: 'updateCmd', cmd: c });
+};
 
-// окно «Вышла новая версия» — только в окне программы, когда оно на экране; «Позже» — до следующего запуска
+// окна обновления — только в окне программы:
+//   «Вышла версия X» (что нового, «Скачать и обновить» / «Позже») → «Скачиваю…» → «Нужно перезапустить» (одна кнопка).
+// Окно о перезапуске ждёт, пока музыка не остановится, — обновление никогда не оборвёт музыку.
 const updDlg = $('#updDlg');
-function maybeShowUpdateDialog() {
-  const u = update;
-  if (role !== 'engine' || !u || u.status !== 'ready' || u.dismissed === u.version) { if (updDlg.open && (!u || u.status !== 'ready')) updDlg.close(); return; }
-  const playing = anyPlaying();
-  $('#updDlgNow').disabled = playing;
-  $('#updDlgHint').textContent = playing ? 'Сейчас играет музыка — остановите её, чтобы обновить. Или обновитесь позже во вкладке «Настройки».' : 'Программа закроется на несколько секунд и откроется снова. Потоки и расписание сохранятся.';
-  if (updDlg.open || document.visibilityState !== 'visible' || document.querySelector('dialog[open]')) return;
-  $('#updDlgTitle').textContent = 'Вышла версия ' + u.version;
-  $('#updDlgNotes').innerHTML = mdLite(u.notes) || '<p>Описание выпуска не загрузилось.</p>';
-  $('#updDlgLink').href = u.url || '#';
-  $('#updDlgLink').hidden = !u.url;
-  updDlg.showModal();
+let dlgMode = '', dlgHiddenDownload = false, dlgFollow = false;
+function setDlgMode(mode, u) {
+  dlgMode = mode;
+  $('#updDlgNotes').hidden = mode !== 'available';
+  $('#updDlgProg').hidden = mode !== 'downloading';
+  $('#updDlgLater').hidden = mode === 'ready';
+  $('#updDlgLink').hidden = mode !== 'available' || !u.url;
+  if (mode === 'available') {
+    $('#updDlgTitle').textContent = 'Вышла версия ' + u.version;
+    $('#updDlgNotes').innerHTML = mdLite(u.notes) || '<p>Описание выпуска не загрузилось.</p>';
+    $('#updDlgLink').href = u.url || '#';
+    $('#updDlgHint').textContent = 'Установщик скачается и программа перезапустится. Потоки и расписание сохранятся. Обновиться можно и позже — во вкладке «Настройки».';
+    $('#updDlgLater').textContent = 'Позже';
+    $('#updDlgNow').textContent = 'Скачать и обновить'; $('#updDlgNow').hidden = false;
+  } else if (mode === 'downloading') {
+    $('#updDlgTitle').textContent = 'Скачиваю версию ' + u.version;
+    $('#updDlgHint').textContent = 'Можно скрыть это окно — загрузка продолжится, а прогресс будет виден во вкладке «Настройки».';
+    $('#updDlgLater').textContent = 'Скрыть';
+    $('#updDlgNow').hidden = true;
+  } else if (mode === 'ready') {
+    $('#updDlgTitle').textContent = 'Обновление готово';
+    $('#updDlgHint').textContent = 'Чтобы установить версию ' + u.version + ', программу нужно перезапустить. Это займёт несколько секунд, потоки и расписание сохранятся.';
+    $('#updDlgNow').textContent = 'Перезапустить'; $('#updDlgNow').hidden = false;
+  }
 }
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') maybeShowUpdateDialog(); });
-window.addEventListener('focus', maybeShowUpdateDialog);
-$('#updDlgLater').onclick = () => { updDlg.close(); send({ t: 'updateCmd', cmd: 'later' }); };
-$('#updDlgNow').onclick = () => { updDlg.close(); send({ t: 'updateCmd', cmd: 'install' }); };
+function updateDialog() {
+  const u = update;
+  if (role !== 'engine') return;
+  if (!u) { if (updDlg.open) updDlg.close(); return; }
+  let want = '';
+  if (u.status === 'available' && u.dismissed !== u.version && !u.error) want = 'available';
+  else if (u.status === 'downloading' && dlgFollow && !dlgHiddenDownload) want = 'downloading';
+  else if (u.status === 'ready' && (dlgFollow || u.dismissed !== u.version) && !anyPlaying()) want = 'ready';
+  if (!want) { if (updDlg.open && dlgMode) { updDlg.close(); dlgMode = ''; } return; }
+  if (want === 'downloading') {
+    $('#updDlgBarFill').style.width = (u.progress || 0) + '%';
+    $('#updDlgProgText').textContent = progressText(u).replace(/^с/, 'С');
+  }
+  if (dlgMode !== want) setDlgMode(want, u);
+  if (!updDlg.open) {
+    if (document.querySelector('dialog[open]')) return; // открыто другое окно — покажем позже
+    updDlg.showModal();
+  }
+}
+// окно о перезапуске нельзя закрыть клавишей Esc — только кнопкой
+updDlg.addEventListener('cancel', (e) => { if (dlgMode === 'ready') e.preventDefault(); else if (dlgMode === 'available') send({ t: 'updateCmd', cmd: 'later' }); else if (dlgMode === 'downloading') dlgHiddenDownload = true; });
+updDlg.addEventListener('close', () => { dlgMode = ''; });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') updateDialog(); });
+window.addEventListener('focus', updateDialog);
+$('#updDlgLater').onclick = () => {
+  if (dlgMode === 'available') send({ t: 'updateCmd', cmd: 'later' });
+  if (dlgMode === 'downloading') dlgHiddenDownload = true;
+  updDlg.close();
+};
+$('#updDlgNow').onclick = () => {
+  if (dlgMode === 'available') { dlgFollow = true; dlgHiddenDownload = false; send({ t: 'updateCmd', cmd: 'download' }); }
+  else if (dlgMode === 'ready') { updDlg.close(); send({ t: 'updateCmd', cmd: 'install' }); }
+};
 $('#autoOpen').onchange = () => send({ t: 'saveSettings', autoOpen: $('#autoOpen').checked });
 $('#soloAll').onchange = () => send({ t: 'saveSettings', solo: $('#soloAll').checked });
 
@@ -1319,7 +1378,7 @@ function renderKeyPreview() {
 function nameHint(bad) {
   const h = $('#nameHint');
   h.className = 'name-hint' + (bad ? ' bad' : '');
-  h.textContent = bad ? 'Дальше не помещается на кнопку — название уже самое мелкое из возможных' : NAME_HINT;
+  h.textContent = bad ? 'Достигнута максимальная длина: более длинное название не поместится на кнопку' : NAME_HINT;
   clearTimeout(hintTimer);
   if (bad) hintTimer = setTimeout(() => nameHint(false), 3000);
 }

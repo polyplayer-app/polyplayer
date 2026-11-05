@@ -49,6 +49,18 @@ jobs:
         if: steps.ver.outputs.skip != 'true'
         run: node patch-exe.js "dist/win-unpacked/PolyPlayer.exe" build/icon.ico ${{ steps.ver.outputs.version }}
 
+      - name: Плагин Stream Deck (внутрь программы и отдельным файлом)
+        if: steps.ver.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          $v = '${{ steps.ver.outputs.version }}'
+          Copy-Item app/public/keyname.js plugin/com.polyplayer.deck.sdPlugin/bin/keyname.js -Force
+          node -e "const f='plugin/com.polyplayer.deck.sdPlugin/manifest.json',fs=require('fs');const m=JSON.parse(fs.readFileSync(f,'utf8'));m.Version='$v.0';fs.writeFileSync(f,JSON.stringify(m,null,2))"
+          Push-Location plugin
+          7z a -tzip ../dist/PolyPlayer.streamDeckPlugin com.polyplayer.deck.sdPlugin | Out-Null
+          Pop-Location
+          Copy-Item dist/PolyPlayer.streamDeckPlugin dist/win-unpacked/resources/PolyPlayer.streamDeckPlugin
+
       - name: Установщик (NSIS)
         if: steps.ver.outputs.skip != 'true'
         shell: pwsh
@@ -56,15 +68,6 @@ jobs:
           if (-not (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { choco install nsis -y --no-progress }
           & "${env:ProgramFiles(x86)}\NSIS\makensis.exe" /V2 /DVERSION=${{ steps.ver.outputs.version }} installer.nsi
           if ($LASTEXITCODE -ne 0) { throw "makensis failed" }
-
-      - name: Плагин Stream Deck
-        if: steps.ver.outputs.skip != 'true'
-        shell: pwsh
-        run: |
-          Copy-Item app/public/keyname.js plugin/com.polyplayer.deck.sdPlugin/bin/keyname.js -Force
-          Push-Location plugin
-          7z a -tzip ../dist/PolyPlayer.streamDeckPlugin com.polyplayer.deck.sdPlugin | Out-Null
-          Pop-Location
 
       - name: Выпуск на GitHub
         if: steps.ver.outputs.skip != 'true'
@@ -74,6 +77,8 @@ jobs:
         run: |
           $v = '${{ steps.ver.outputs.version }}'
           $tag = "v$v"
-          $files = @("dist/PolyPlayer-Setup-$v.exe", "dist/PolyPlayer.streamDeckPlugin")
+          # PolyPlayer-Setup.exe — та же программа под постоянным именем: ссылка «скачать последнюю версию» не меняется
+          Copy-Item "dist/PolyPlayer-Setup-$v.exe" "dist/PolyPlayer-Setup.exe"
+          $files = @("dist/PolyPlayer-Setup-$v.exe", "dist/PolyPlayer-Setup.exe", "dist/PolyPlayer.streamDeckPlugin")
           gh release create $tag @files --title "PolyPlayer $v" --notes-file RELEASE_NOTES.md --target $env:GITHUB_SHA
           if ($LASTEXITCODE -ne 0) { throw "gh release create failed" }
