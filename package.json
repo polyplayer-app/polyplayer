@@ -1,0 +1,16 @@
+{
+  "name": "polyplayer",
+  "productName": "PolyPlayer",
+  "version": "3.0.0",
+  "description": "PolyPlayer — несколько музыкальных потоков, расписание и пульт Stream Deck",
+  "main": "main.js",
+  "author": "PolyPlayer",
+  "license": "UNLICENSED",
+  "private": true,
+  "updateRepo": "polyplayer-app/polyplayer",
+  "devDependencies": {
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0",
+    "resedit": "^3.1.0"
+  }
+}

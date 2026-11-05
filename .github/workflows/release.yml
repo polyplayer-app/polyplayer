@@ -1,0 +1,66 @@
+# Сборка PolyPlayer для Windows и публикация выпуска на GitHub.
+# Запускается, когда в репозиторий отправлен тег вида v3.0.1 (версия должна совпадать с package.json).
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Версия
+        id: ver
+        shell: pwsh
+        run: |
+          $v = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$v") { throw "Тег $env:GITHUB_REF_NAME не совпадает с версией в package.json ($v)" }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Зависимости
+        run: npm ci
+
+      - name: Сборка программы
+        run: npx electron-builder --config builder.json --win --x64 --dir
+
+      - name: Значок и версия в PolyPlayer.exe
+        run: node patch-exe.js "dist/win-unpacked/PolyPlayer.exe" build/icon.ico ${{ steps.ver.outputs.version }}
+
+      - name: Установщик (NSIS)
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { choco install nsis -y --no-progress }
+          & "${env:ProgramFiles(x86)}\NSIS\makensis.exe" /V2 /DVERSION=${{ steps.ver.outputs.version }} installer.nsi
+          if ($LASTEXITCODE -ne 0) { throw "makensis failed" }
+
+      - name: Плагин Stream Deck
+        shell: pwsh
+        run: |
+          Copy-Item app/public/keyname.js plugin/com.polyplayer.deck.sdPlugin/bin/keyname.js -Force
+          Push-Location plugin
+          7z a -tzip ../dist/PolyPlayer.streamDeckPlugin com.polyplayer.deck.sdPlugin | Out-Null
+          Pop-Location
+
+      - name: Выпуск на GitHub
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $v = '${{ steps.ver.outputs.version }}'
+          $tag = "v$v"
+          $files = @("dist/PolyPlayer-Setup-$v.exe", "dist/PolyPlayer.streamDeckPlugin")
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) { gh release upload $tag @files --clobber }
+          else { gh release create $tag @files --title "PolyPlayer $v" --notes-file RELEASE_NOTES.md --verify-tag }

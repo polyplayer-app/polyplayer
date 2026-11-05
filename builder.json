@@ -1,0 +1,9 @@
+{
+  "appId": "com.polyplayer.app",
+  "productName": "PolyPlayer",
+  "executableName": "PolyPlayer",
+  "directories": { "output": "dist", "buildResources": "build" },
+  "files": ["main.js", "app/**/*", "package.json"],
+  "win": { "target": ["nsis"], "icon": "build/icon.ico", "signAndEditExecutable": false },
+  "electronDownload": {}
+}

@@ -1,0 +1,1328 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PolyPlayer</title>
+<link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/icon-48.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<style>
+@font-face { font-family: Inter; src: url("/Inter-cyrillic.woff2") format("woff2"); font-weight: 100 900; unicode-range: U+0400-045F, U+0490-0491, U+2116; }
+@font-face { font-family: Inter; src: url("/Inter-latin.woff2") format("woff2"); font-weight: 100 900; }
+:root {
+  --bg: #0C0D10; --s1: #14161B; --s2: #1B1E25; --s3: #23272F; --line: rgba(255,255,255,.07); --line2: rgba(255,255,255,.12);
+  --tx: #ECEDEF; --mu: #8B909A; --mu2: #5F646D; --red: #E5484D; --ok: #46A758; --c: #8B909A;
+  /* фирменный акцент PolyPlayer: коралл, как средняя волна на логотипе */
+  --acc: #FF6A4D; --acc2: #F0484E; --acc-grad: linear-gradient(135deg, #FF9A5C, #F0484E);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--tx); font: 13.5px/1.45 Inter, "Segoe UI", system-ui, sans-serif; letter-spacing: -.005em; }
+body { background: radial-gradient(1100px 480px at 12% -12%, color-mix(in srgb, var(--glow, #FF6A4D) 12%, transparent), transparent 60%), var(--bg); background-attachment: fixed; min-height: 100vh; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+svg { display: block; }
+.app { max-width: 1280px; margin: 0 auto; padding: 16px 22px 32px; }
+
+/* ---------- шапка ---------- */
+.top { display: flex; align-items: center; gap: 14px; }
+.logo { width: 34px; height: 34px; border-radius: 10px; box-shadow: 0 6px 18px -6px rgba(229,72,77,.65), 0 0 0 1px rgba(255,255,255,.06); }
+.brand b { display: block; font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+.brand span { font-size: 11.5px; color: var(--mu); display: flex; align-items: center; gap: 6px; }
+.brand span i { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+.brand span.off i { background: var(--red); }
+.pill { display: flex; align-items: center; gap: 9px; padding: 7px 14px 7px 11px; border-radius: 999px; background: var(--s1); border: 1px solid var(--line); color: var(--mu); font-size: 12.5px; max-width: 420px; min-width: 0; margin-left: 8px; }
+.pill b { color: var(--tx); font-weight: 600; }
+.pill .tr { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.eq { display: flex; gap: 2px; align-items: flex-end; height: 12px; flex: none; }
+.eq i { width: 3px; border-radius: 2px; background: var(--c); animation: eq 1s ease-in-out infinite; }
+.eq i:nth-child(2) { animation-delay: -.35s; } .eq i:nth-child(3) { animation-delay: -.7s; }
+@keyframes eq { 0%, 100% { height: 4px; } 50% { height: 12px; } }
+.sp { flex: 1; }
+.clock { text-align: right; margin-right: 6px; line-height: 1.1; }
+.clock b { display: block; font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.clock span { font-size: 10px; font-weight: 600; letter-spacing: .12em; color: var(--mu); text-transform: uppercase; }
+.ghost { display: flex; align-items: center; gap: 7px; background: transparent; border: 1px solid var(--line2); color: var(--tx); padding: 8px 13px; border-radius: 10px; font-weight: 600; font-size: 13px; transition: background .15s; }
+.ghost:hover { background: var(--s2); }
+.ghost svg { width: 16px; height: 16px; color: var(--mu); }
+.danger { display: flex; align-items: center; gap: 8px; background: rgba(229,72,77,.14); color: #FF8A8D; border: 1px solid rgba(229,72,77,.38); padding: 8px 15px; border-radius: 10px; font-weight: 700; font-size: 13px; transition: background .15s; }
+.danger:hover { background: rgba(229,72,77,.24); }
+.danger svg { width: 13px; height: 13px; }
+.primary { display: flex; align-items: center; gap: 7px; background: var(--acc-grad); color: #fff; border: 0; box-shadow: 0 8px 22px -12px var(--acc); padding: 9px 16px; border-radius: 10px; font-weight: 700; font-size: 13px; }
+.primary svg { width: 15px; height: 15px; }
+
+/* ---------- вкладки ---------- */
+.tabs { display: flex; gap: 4px; margin: 18px 0 14px; padding: 4px; background: var(--s1); border: 1px solid var(--line); border-radius: 12px; width: max-content; }
+.tabs button { display: flex; align-items: center; gap: 8px; border: 0; background: transparent; color: var(--mu); padding: 7px 14px; border-radius: 9px; font-weight: 600; font-size: 13px; transition: color .15s, background .15s; }
+.tabs button svg { width: 16px; height: 16px; }
+.tabs button:hover { color: var(--tx); }
+.tabs button.on svg { color: var(--acc); }
+.tabs button.on { background: var(--s3); color: var(--tx); box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 4px 12px -6px rgba(0,0,0,.6); }
+.tabs i { font-style: normal; font-size: 11px; color: var(--mu); background: rgba(255,255,255,.07); padding: 1px 7px; border-radius: 99px; }
+.tabs i:empty { display: none; }
+.pane[hidden] { display: none; }
+.pane-sub { color: var(--mu); font-size: 13px; margin: -4px 0 14px; }
+.pane-sub b { color: var(--tx); font-weight: 600; }
+.banner { margin: 16px 0 0; padding: 11px 14px; border-radius: 12px; font-size: 13px; background: var(--s1); border: 1px solid var(--line2); color: var(--mu); }
+.banner b { color: var(--tx); }
+.banner.warn { border-color: rgba(229,72,77,.4); color: #FF8A8D; }
+.banner a { color: var(--tx); }
+
+/* ---------- карточки потоков ---------- */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; }
+.card { --c: #8B909A; background: var(--s1); border: 1px solid var(--line); border-radius: 15px; padding: 12px 14px 12px; position: relative; transition: border-color .25s, box-shadow .25s, background .25s; }
+.card.playing { background: linear-gradient(160deg, color-mix(in srgb, var(--c) 20%, var(--s1)) 0%, var(--s1) 58%); border-color: color-mix(in srgb, var(--c) 45%, transparent); box-shadow: 0 12px 40px -20px var(--c); }
+.row1 { display: flex; align-items: center; gap: 8px; min-height: 24px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; opacity: .45; }
+.card.playing .dot { opacity: 1; box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 20%, transparent); }
+.card.paused .dot { opacity: .8; }
+.name { font-size: 14px; font-weight: 700; letter-spacing: .01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.tools { margin-left: auto; display: flex; gap: 2px; opacity: .55; transition: opacity .15s; }
+.card:hover .tools { opacity: 1; }
+.tb { width: 24px; height: 24px; border: 0; border-radius: 8px; background: transparent; color: var(--mu); display: grid; place-items: center; }
+.tb:hover { background: var(--s3); color: var(--tx); }
+.tb svg { width: 14px; height: 14px; }
+.st { font-size: 11px; color: var(--mu); font-weight: 600; margin-top: 0; }
+.card.playing .st { color: color-mix(in srgb, var(--c) 65%, white); }
+.track { margin-top: 8px; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 20px; }
+.track.idle { color: var(--mu); }
+.track.err { color: #FF8A8D; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; margin: 0; background: transparent; cursor: pointer; --p: 0%; }
+input[type=range]::-webkit-slider-runnable-track { height: 5px; border-radius: 5px; background: linear-gradient(to right, var(--c) var(--p), rgba(255,255,255,.10) var(--p)); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -4.5px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.5); }
+input.seek { height: 12px; margin-top: 6px; }
+input.seek::-webkit-slider-runnable-track { height: 4px; }
+input.seek::-webkit-slider-thumb { width: 12px; height: 12px; margin-top: -4px; opacity: 0; transition: opacity .15s; }
+.card:hover input.seek::-webkit-slider-thumb { opacity: 1; }
+input.seek:disabled { cursor: default; }
+.times { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--mu); margin-top: 0; font-variant-numeric: tabular-nums; }
+.ctl { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.play { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--c); color: #0C0D10; display: grid; place-items: center; flex: none; transition: transform .1s, filter .15s; box-shadow: 0 6px 18px -8px var(--c); }
+.play:hover { filter: brightness(1.08); } .play:active { transform: scale(.95); }
+.play svg { width: 18px; height: 18px; }
+.ib { width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--line); background: var(--s2); color: var(--tx); display: grid; place-items: center; flex: none; }
+.ib:hover { background: var(--s3); }
+.ib svg { width: 14px; height: 14px; }
+.vol { flex: 1; display: flex; align-items: center; gap: 6px; margin-left: 4px; min-width: 0; }
+.vol svg { width: 14px; height: 14px; color: var(--mu); flex: none; }
+.vv { width: 32px; text-align: right; font-size: 12px; color: var(--mu); font-variant-numeric: tabular-nums; flex: none; }
+.meta { display: flex; gap: 5px; flex-wrap: nowrap; overflow: hidden; margin-top: 10px; -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); mask-image: linear-gradient(to right, #000 85%, transparent); }
+.tag { font-size: 10.5px; color: var(--mu); background: var(--s2); border: 1px solid var(--line); padding: 2px 7px; border-radius: 6px; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.tag svg { width: 11px; height: 11px; }
+.add-card { border: 1.5px dashed var(--line2); border-radius: 18px; background: transparent; color: var(--mu); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 170px; font-weight: 600; transition: color .15s, border-color .15s, background .15s; }
+.add-card:hover { color: var(--tx); border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.02); }
+.add-card svg { width: 22px; height: 22px; }
+
+/* ---------- расписание ---------- */
+.list { background: var(--s1); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.srow { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.srow:last-child { border-bottom: 0; }
+.srow.off { opacity: .5; }
+.srow select { appearance: none; -webkit-appearance: none; background: var(--s2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238B909A' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center; border: 1px solid var(--line); border-radius: 9px; padding: 7px 30px 7px 11px; font-weight: 600; min-width: 170px; color-scheme: dark; }
+.days { display: flex; gap: 4px; }
+.day { width: 32px; height: 28px; border-radius: 8px; border: 0; background: var(--s2); color: var(--mu); font-size: 11.5px; font-weight: 600; }
+.day.on { background: var(--acc-grad); color: #fff; }
+.times2 { display: flex; align-items: center; gap: 8px; color: var(--mu); font-size: 12px; }
+.tbox { position: relative; display: inline-flex; }
+.tbox input { background: var(--s2); border: 1px solid var(--line); border-radius: 9px; padding: 6px 8px; width: 104px; font-weight: 600; font-variant-numeric: tabular-nums; color-scheme: dark; }
+.tbox input:disabled { opacity: .35; }
+.tclr { position: absolute; right: -7px; top: -7px; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--line2); background: var(--s3); color: var(--mu); font-size: 11px; line-height: 1; padding: 0; display: grid; place-items: center; }
+.tclr:hover { color: var(--tx); }
+.tclr[hidden] { display: none; }
+.mode { font-size: 12px; color: #FF8A8D; }
+.name-row { display: flex; gap: 14px; align-items: flex-start; }
+.name-in { flex: 1; min-width: 0; }
+.name-hint { font-size: 12px; color: var(--mu); margin-top: 6px; }
+.name-hint.bad { color: #FF8A8D; }
+.keyprev { width: 72px; height: 72px; border-radius: 12px; overflow: hidden; flex: none; box-shadow: 0 0 0 1px var(--line2), 0 8px 20px -10px #000; }
+.keyprev svg { display: block; width: 72px; height: 72px; }
+.srow .del { margin-left: auto; }
+.switch { position: relative; width: 40px; height: 23px; flex: none; }
+.switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+.switch span { position: absolute; inset: 0; border-radius: 99px; background: var(--s3); transition: background .15s; pointer-events: none; }
+.switch span::after { content: ""; position: absolute; left: 3px; top: 3px; width: 17px; height: 17px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.switch input:checked + span { background: var(--acc); }
+.switch input:checked + span::after { transform: translateX(17px); }
+.empty { border: 1.5px dashed var(--line2); border-radius: 16px; padding: 28px; text-align: center; color: var(--mu); }
+.pane-actions { display: flex; justify-content: flex-end; margin-top: 12px; }
+
+/* ---------- настройки ---------- */
+.set { display: flex; align-items: center; gap: 16px; background: var(--s1); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; margin-bottom: 10px; cursor: pointer; }
+.set .txt { flex: 1; }
+.set.upd { cursor: default; }
+.btn2.go { background: var(--acc-grad); border-color: transparent; color: #fff; }
+.updot { width: 7px; height: 7px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 8px var(--acc); }
+.set[hidden] { display: none; }
+.set b { display: block; font-weight: 600; font-size: 14px; }
+.set small { color: var(--mu); font-size: 12.5px; }
+.note { color: var(--mu); font-size: 12.5px; margin: 16px 2px 0; display: flex; gap: 8px; align-items: flex-start; }
+.note svg { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+
+/* ---------- окна ---------- */
+dialog { border: 1px solid var(--line2); border-radius: 18px; padding: 0; background: #15171C; color: var(--tx); width: min(580px, calc(100vw - 32px)); box-shadow: 0 30px 80px -20px rgba(0,0,0,.8); }
+dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
+.dlg { padding: 22px 24px; }
+.dlg h2 { margin: 0 0 18px; font-size: 18px; font-weight: 700; }
+.field { margin-bottom: 14px; }
+.field > label.l { display: block; font-size: 12px; font-weight: 600; color: var(--mu); margin-bottom: 6px; }
+.field input[type=text], .field input[type=number], .field input:not([type]) { width: 100%; background: var(--s2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; color-scheme: dark; }
+.field input:focus, .srow select:focus, .tbox input:focus { outline: 2px solid rgba(255,255,255,.18); outline-offset: 1px; }
+.row { display: flex; gap: 8px; } .row > input { flex: 1; min-width: 0; }
+.btn2 { background: var(--s3); border: 1px solid var(--line2); border-radius: 10px; padding: 8px 14px; font-weight: 600; white-space: nowrap; }
+.btn2:hover { background: #2B3039; }
+.btn2:disabled { opacity: .5; }
+.folder-info { font-size: 12.5px; margin-top: 6px; color: var(--mu); }
+.folder-info.ok { color: #7CC98A; } .folder-info.bad { color: #FF8A8D; }
+.three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.unit { position: relative; } .unit input { padding-right: 38px !important; }
+.unit::after { content: "сек"; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--mu); pointer-events: none; }
+.sub { font-size: 11px; color: var(--mu); margin-top: 5px; }
+.checks { display: flex; flex-direction: column; gap: 10px; }
+.chk { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.chk input { width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--acc); flex: none; }
+.chk small { display: block; color: var(--mu); font-size: 12px; }
+.swatches { display: flex; gap: 9px; }
+.swc { width: 28px; height: 28px; border-radius: 50%; border: 0; box-shadow: 0 0 0 1px rgba(255,255,255,.1) inset; }
+.swc.on { outline: 2px solid #fff; outline-offset: 3px; }
+.dlg-foot { display: flex; gap: 10px; margin-top: 20px; align-items: center; }
+.dlg-foot .spacer { flex: 1; }
+.btn-del { background: transparent; border: 1px solid rgba(229,72,77,.4); color: #FF8A8D; border-radius: 10px; padding: 8px 14px; font-weight: 600; }
+.browser-path { display: flex; gap: 8px; margin-bottom: 10px; }
+.browser-path input { flex: 1; background: var(--s2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 13px; color-scheme: dark; }
+.shortcuts { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.chip { border: 1px solid var(--line2); border-radius: 99px; padding: 4px 11px; font-size: 12px; background: var(--s2); font-weight: 600; }
+.dirlist { border: 1px solid var(--line); border-radius: 12px; background: var(--s1); height: 290px; overflow: auto; }
+.dir { padding: 9px 13px; border-bottom: 1px solid var(--line); cursor: pointer; display: flex; gap: 9px; align-items: center; font-size: 13.5px; }
+.dir:hover { background: var(--s2); }
+.dir svg { width: 15px; height: 15px; color: var(--mu); flex: none; }
+
+.help-dlg { width: min(800px, calc(100vw - 32px)); }
+.help { padding: 0 28px 26px; overflow-y: auto; max-height: calc(100vh - 60px); font-size: 14px; line-height: 1.6; color: #D5D7DB; }
+.help-head { position: sticky; top: 0; background: #15171C; display: flex; align-items: center; gap: 12px; padding: 22px 0 14px; border-bottom: 1px solid var(--line); margin-bottom: 4px; z-index: 1; }
+.help-head img { width: 32px; height: 32px; border-radius: 9px; }
+.help-head h2 { margin: 0; flex: 1; font-size: 19px; color: var(--tx); }
+.help h3 { font-size: 15px; color: var(--tx); margin: 24px 0 6px; }
+.help b { color: var(--tx); }
+.help p { margin: 6px 0; } .help ul, .help ol { margin: 6px 0; padding-left: 22px; } .help li { margin: 4px 0; }
+.help .lead { font-size: 15.5px; margin-top: 14px; }
+.mini-keys { display: inline-flex; gap: 10px; margin: 8px 0 4px; }
+.mk { width: 92px; height: 92px; border-radius: 14px; background: #202227; color: #F2E6CC; border: 3px dashed #E9B44C; display: grid; place-items: center; text-align: center; font-size: 11px; line-height: 1.25; padding: 6px; font-weight: 700; }
+.mk b { font-size: 14px; color: #F2E6CC; }
+
+#unlock { position: fixed; inset: 0; background: rgba(5,6,8,.85); display: grid; place-items: center; z-index: 50; cursor: pointer; }
+#unlock[hidden] { display: none; }
+#unlock div { background: var(--red); color: #fff; padding: 22px 30px; border-radius: 18px; font-weight: 800; font-size: 19px; text-align: center; }
+#unlock small { display: block; font-weight: 500; font-size: 13.5px; margin-top: 6px; opacity: .9; }
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(8px); background: #F2F3F5; color: #0C0D10; padding: 10px 18px; border-radius: 12px; font-size: 13.5px; font-weight: 600; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; box-shadow: 0 10px 30px -10px rgba(0,0,0,.6); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <img class="logo" src="/icon-256.png" alt="">
+    <div class="brand"><b>PolyPlayer</b><span id="conn"><i></i>подключено</span></div>
+    <div class="pill" id="nowPill"></div>
+    <div class="sp"></div>
+    <div class="clock"><b id="clkTime">--:--</b><span id="clkDay"></span></div>
+    <button class="ghost" id="helpBtn" title="Как пользоваться программой">ICON:help Справка</button>
+    <button class="danger" id="stopAll" title="Плавно выключить всю музыку">ICON:stopAll Стоп всё</button>
+  </header>
+  <div id="banner"></div>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="streams" class="on">ICON:music Потоки <i id="cntStreams"></i></button>
+    <button data-tab="sched">ICON:clock Расписание <i id="cntSched"></i></button>
+    <button data-tab="settings">ICON:gear Настройки <span class="updot" hidden></span></button>
+  </nav>
+
+  <section class="pane" data-pane="streams">
+    <div class="grid" id="streams"></div>
+  </section>
+
+  <section class="pane" data-pane="sched" hidden>
+    <div class="pane-sub" id="nextRun"></div>
+    <div class="list" id="sched"></div>
+    <div class="pane-actions"><button class="primary" id="addSched">ICON:plus Добавить правило</button></div>
+  </section>
+
+  <section class="pane" data-pane="settings" hidden>
+    <label class="set">
+      <div class="txt"><b>Запуск вместе с компьютером</b><small>После включения компьютера PolyPlayer запустится сам и спрячется в значок возле часов</small></div>
+      <span class="switch"><input type="checkbox" id="autoOpen"><span></span></span>
+    </label>
+    <label class="set">
+      <div class="txt"><b>Играет только один поток</b><small>Когда включаете поток, тот, что играл, плавно затихает. Выключите, если нужно смешивать потоки</small></div>
+      <span class="switch"><input type="checkbox" id="soloAll"><span></span></span>
+    </label>
+    <div class="set upd" id="updBox">
+      <div class="txt"><b>Обновления</b><small id="updText">Версия —</small></div>
+      <button class="btn2" id="updBtn" type="button">Проверить</button>
+    </div>
+    <p class="note">ICON:help Крестик прячет окно в значок возле часов — музыка продолжает играть. Выйти из программы: правый клик по значку → «Выйти».</p>
+  </section>
+</div>
+<dialog id="helpDlg" class="help-dlg">
+  <div class="help">
+    <div class="help-head">
+      <img src="/icon-256.png" alt="">
+      <h2>Как пользоваться PolyPlayer</h2>
+      <button class="ghost" id="helpClose" type="button">Закрыть</button>
+    </div>
+
+    <p class="lead">PolyPlayer включает фоновую музыку: перед началом мероприятия или служения, под объявления, в перерыве, в конце. Каждый такой набор музыки — это <b>поток</b>. Поток включается одной кнопкой: звук плавно нарастает, а при выключении плавно затихает — без резких обрывов.</p>
+    <p>В программе три вкладки: <b>Потоки</b> — сама музыка, <b>Расписание</b> — что включать и выключать автоматически, <b>Настройки</b>.</p>
+
+    <h3>1. Создайте потоки</h3>
+    <p>На вкладке «Потоки» нажмите пустую карточку <b>«Новый поток»</b>. Дайте потоку понятное название — оно будет написано на кнопке пульта, например «Перерыв» или «Финал». Название — одно или два слова, примерно до 7 букв в каждом: так оно поместится на кнопку крупно и одинаково с другими. Рядом с полем видно, как будет выглядеть кнопка. Затем нажмите <b>«Выбрать…»</b> и укажите папку с музыкой. Подойдут обычные файлы mp3, m4a, wav, flac, ogg. Подпапки тоже учитываются.</p>
+    <p>Остальные настройки можно оставить как есть. Если интересно, что они делают:</p>
+    <ul>
+      <li><b>Плавный старт и затухание</b> — за сколько секунд музыка набирает громкость при включении и сходит на нет при выключении.</li>
+      <li><b>Переход треков</b> — следующая песня начинается, пока предыдущая ещё затихает, как на радио. Ноль — песни идут друг за другом.</li>
+      <li><b>Перемешивать треки</b> — каждый раз новый порядок.</li>
+      <li><b>Начинать со случайного места</b> — удобно, если в папке один длинный трек на час: при каждом включении он начнётся с нового места.</li>
+    </ul>
+    <p>Карточки потоков идут по три в ряд, следующие — новым рядом. Порядок меняется стрелками ‹ › на карточке, настройки — карандашом.</p>
+
+    <h3>2. Включайте музыку</h3>
+    <p>На карточке потока: <b>▶</b> — включить или поставить на паузу, <b>⏭</b> — следующая песня, <b>■</b> — остановить (в следующий раз поток начнётся заново). Тонкая полоса над кнопками показывает, какая часть песни играет: по ней можно щёлкнуть или потянуть, чтобы перемотать. Кнопка <b>«Стоп всё»</b> вверху плавно выключает всё, что играет.</p>
+    <p>Громкость потока — ползунок на его карточке. Программа запоминает её, и в следующий раз поток зазвучит так же. Общую громкость регулируйте ручкой на звуковой карте или пульте.</p>
+    <p>Обычно одновременно играет только один поток: когда вы включаете другой, предыдущий плавно затихает. Это можно выключить во вкладке «Настройки», если нужно смешивать потоки.</p>
+
+    <h3>3. Настройте расписание (по желанию)</h3>
+    <p>Расписание включает и выключает музыку само. На вкладке «Расписание» нажмите <b>«Добавить правило»</b>, выберите поток, дни недели и время.</p>
+    <ul>
+      <li><b>«с» и «до»</b> — музыка включится в начале и сама затихнет к концу. Например, воскресенье с 9:40 до 9:55: ровно в 9:55 будет тишина, и можно начинать.</li>
+      <li><b>Только «до»</b> (время «с» убрано крестиком) — программа ничего не включает сама. Но если к этому времени поток играет, она его плавно остановит.</li>
+      <li><b>«Все потоки»</b> (первый пункт в списке) — в указанное время плавно останавливается любая музыка, какая бы ни играла. Удобно поставить такое правило на начало мероприятия.</li>
+      <li>Если в момент автозапуска этот поток уже играет, он просто продолжает играть. Если играет другой поток — включится запланированный.</li>
+      <li>Музыка включается только в само время «с». Если компьютер или программу включили позже — она не запустится сама, включите её кнопкой. Если её выключили вручную — сама она уже не включится до следующего раза.</li>
+      <li>Время «до» должно быть позже времени «с» в тот же день. Правило через полночь (например, с 23:50 до 00:10) не сработает — программа подсветит его.</li>
+    </ul>
+
+    <h3>4. Окно программы</h3>
+    <p>PolyPlayer — обычная программа Windows. Музыка играет, пока программа запущена, даже когда окна не видно.</p>
+    <p><b>Крестик в углу окна не выключает программу</b> — он прячет окно в значок возле часов, а музыка продолжает играть. Чтобы снова открыть окно, нажмите на этот значок (или на значок PolyPlayer на рабочем столе).</p>
+    <p>Чтобы совсем выйти из программы: правый клик по значку возле часов → <b>«Выйти»</b>. Музыка при этом плавно затихнет. Чтобы просто выключить музыку, нажмите «Стоп всё».</p>
+    <p>Во вкладке «Настройки» включён <b>запуск вместе с компьютером</b>: после включения компьютера программа запустится сама и спрячется к часам.</p>
+
+    <p><b>Обновления.</b> PolyPlayer сам проверяет, вышла ли новая версия, и скачивает её в фоне. Когда она готова, у вкладки «Настройки» появляется точка, а там — кнопка «Установить». Пока играет музыка, установить нельзя: остановите её, нажмите кнопку — программа закроется на несколько секунд и откроется снова. Потоки и расписание сохраняются.</p>
+
+    <h3>5. Пульт Stream Deck</h3>
+    <p>Пульт — это кнопки с экранчиками. Каждой кнопке можно назначить поток и включать музыку, не подходя к компьютеру.</p>
+    <p><b>Как добавить кнопку:</b></p>
+    <ol>
+      <li>Установите плагин PolyPlayer для Stream Deck (файл <b>PolyPlayer.streamDeckPlugin</b> — двойной клик) и откройте программу <b>Stream Deck</b> — её значок тоже возле часов.</li>
+      <li>В списке справа найдите раздел <b>PolyPlayer</b>.</li>
+      <li>Перетащите мышкой действие <b>«Поток»</b> на свободную кнопку.</li>
+      <li>Дальше всё делается на самом пульте. Кнопка покажет первый поток и подскажет:<br>
+        <span class="mini-keys"><span class="mk">1/3<br><b>ПЕРЕРЫВ</b></span><span class="mk">1 нажатие<br><b>дальше</b><br>2 нажатия<br><b>ок</b></span></span><br>
+        Одно нажатие — показать следующий поток, два быстрых нажатия — выбрать тот, что на экране. Кнопка мигнёт галочкой, и готово.</li>
+    </ol>
+    <p><b>Как пользоваться кнопкой потока:</b></p>
+    <ul>
+      <li><b>Нажать</b> — включить или поставить на паузу. Кнопка горит цветом потока, когда он играет, и становится серой на паузе и в остановке. Полоска внизу — громкость.</li>
+      <li><b>Подержать секунду</b> — остановить поток.</li>
+      <li><b>Подержать 3 секунды</b> — выбрать для этой кнопки другой поток, так же: одно нажатие — дальше, два — ок.</li>
+    </ul>
+    <p><b>Другие кнопки</b> из раздела PolyPlayer:</p>
+    <ul>
+      <li><b>Стоп всё</b> — плавно выключает всю музыку. Подсвечена, когда что-то играет.</li>
+      <li><b>Следующий трек</b> — следующая песня в том потоке, который сейчас играет. Работает, когда играет один поток, иначе кнопка серая.</li>
+      <li><b>PolyPlayer</b> — показывает, открыта ли программа. Серая — закрыта, нажатие откроет. Тёмная — спрятана к часам, нажатие покажет окно. Коралловая — окно открыто, нажатие спрячет его.</li>
+    </ul>
+    <p>На пульте с крутилками (Stream Deck +) поток можно повесить и на крутилку: поворот меняет громкость, нажатие — включить или поставить на паузу, касание экранчика — следующая песня.</p>
+
+    <h3>Если что-то не так</h3>
+    <ul>
+      <li><b>Кнопка показывает «1/3» и подсказку</b> — ей ещё не выбран поток. Нажмите два раза быстро, когда на экране нужный.</li>
+      <li><b>Кнопки пульта не реагируют</b> — проверьте, запущена ли программа Stream Deck (значок возле часов). Если сам PolyPlayer был закрыт, первое нажатие кнопки запустит его — подождите пару секунд.</li>
+      <li><b>Музыка играет, но не слышно</b> — проверьте громкость на звуковой карте и что в Windows выбрано нужное устройство вывода звука.</li>
+      <li><b>Поток не сохраняется</b> — в выбранной папке нет музыкальных файлов. Выберите другую папку.</li>
+    </ul>
+  </div>
+</dialog>
+
+<dialog id="editDlg">
+  <div class="dlg" id="editView">
+    <h2 id="editTitle">Новый поток</h2>
+    <div class="field">
+      <label class="l">Название — будет написано на кнопке пульта</label>
+      <div class="name-row">
+        <div class="name-in"><input type="text" id="fName" maxlength="30" placeholder="Например: ПЕРЕРЫВ"><div class="name-hint" id="nameHint">Одно или два слова, примерно до 7 букв в слове</div></div>
+        <div class="keyprev" id="keyPrev" title="Так название будет выглядеть на кнопке Stream Deck"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="l">Папка с музыкой</label>
+      <div class="row"><input type="text" id="fFolder" placeholder="D:\Музыка\Перерыв"><button class="btn2" id="browseBtn" type="button">Выбрать…</button></div>
+      <div class="folder-info" id="folderInfo"></div>
+    </div>
+    <div class="three">
+      <div class="field"><label class="l">Плавный старт</label><div class="unit"><input type="number" id="fIn" min="0" max="30" step="0.5"></div></div>
+      <div class="field"><label class="l">Затухание</label><div class="unit"><input type="number" id="fOut" min="0" max="30" step="0.5"></div></div>
+      <div class="field"><label class="l">Переход треков</label><div class="unit"><input type="number" id="fXf" min="0" max="12" step="1"></div><div class="sub">как на радио · 0 — выкл.</div></div>
+    </div>
+    <div class="field checks">
+      <label class="chk"><input type="checkbox" id="fShuffle"><span>Перемешивать треки</span></label>
+      <label class="chk"><input type="checkbox" id="fRandStart"><span>Начинать со случайного места<small>Для длинных треков (от 3 минут): каждый запуск — с нового момента</small></span></label>
+      <label class="chk"><input type="checkbox" id="fLoop"><span>По кругу<small>Когда треки закончатся — начать заново</small></span></label>
+    </div>
+    <div class="field"><label class="l">Цвет</label><div class="swatches" id="swatches"></div></div>
+    <div class="dlg-foot">
+      <button class="btn-del" id="delBtn" type="button">Удалить</button>
+      <div class="spacer"></div>
+      <button class="ghost" id="cancelBtn" type="button">Отмена</button>
+      <button class="primary" id="saveBtn" type="button">Сохранить</button>
+    </div>
+  </div>
+  <div class="dlg" id="browseView" hidden>
+    <h2>Выбор папки</h2>
+    <div class="browser-path"><input id="bPath"><button class="btn2" id="bGo" type="button">Открыть</button></div>
+    <div class="shortcuts" id="bShort"></div>
+    <div class="dirlist" id="bList"></div>
+    <div class="folder-info" id="bInfo"></div>
+    <div class="dlg-foot">
+      <div class="spacer"></div>
+      <button class="ghost" id="bCancel" type="button">Назад</button>
+      <button class="primary" id="bPick" type="button">Выбрать эту папку</button>
+    </div>
+  </div>
+</dialog>
+
+<div id="unlock" hidden><div>НАЖМИТЕ, ЧТОБЫ ВКЛЮЧИТЬ ЗВУК<small>Браузер не дал запустить звук автоматически</small></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="/keyname.js"></script>
+<script>
+'use strict';
+// ================= общее =================
+const $ = (s, el) => (el || document).querySelector(s);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const WANT_ENGINE = new URLSearchParams(location.search).has('engine');
+const COLORS = ['#E85D2E', '#2A9D8F', '#E9B44C', '#4F86C6', '#8E5572', '#6A994E'];
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const DAY_SHORT = { 0: 'Вс', 1: 'Пн', 2: 'Вт', 3: 'Ср', 4: 'Чт', 5: 'Пт', 6: 'Сб' };
+const DAY_LONG = { 0: 'воскресенье', 1: 'понедельник', 2: 'вторник', 3: 'среда', 4: 'четверг', 5: 'пятница', 6: 'суббота' };
+const ICON = {
+  play: '<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>',
+  pause: '<svg viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="13.5" y="5" width="4" height="14" rx="1.2" fill="currentColor"/></svg>',
+  next: '<svg viewBox="0 0 24 24"><path d="M6 6v12l8.5-6z" fill="currentColor"/><rect x="16" y="6" width="2.6" height="12" rx="1" fill="currentColor"/></svg>',
+  stop: '<svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>',
+  stopAll: '<svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="3" fill="currentColor"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+  left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6l-6 6 6 6"/></svg>',
+  right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6l6 6-6 6"/></svg>',
+  up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11l6-6 6 6M12 5v14"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>',
+  folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg>',
+  music: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>',
+  help: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4"/><circle cx="12" cy="16.8" r=".6" fill="currentColor"/></svg>',
+  vol: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9a4 4 0 0 1 0 6"/></svg>',
+  shuffle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3c4 0 6 10 10 10h3M4 17h3c1.5 0 2.7-1.4 3.7-3.2M14 10c1-1.7 2-3 3-3h3M18 4l3 3-3 3M18 14l3 3-3 3"/></svg>'
+};
+
+let role = 'panel';
+let config = { streams: [], schedules: [] };
+let runtime = {};
+let engineOnline = false;
+let nextRun = null;
+let connected = false;
+let duplicate = false;
+let trayAvailable = false;
+let platform = '';
+let ws = null;
+let quitting = false;
+const seenCmds = new Set();
+
+function send(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+function cmd(c, id, extra) { send(Object.assign({ t: 'cmd', cmd: c, id }, extra || {})); }
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.tm); toast.tm = setTimeout(() => el.classList.remove('show'), 2200); }
+
+function connect() {
+  ws = new WebSocket('ws://' + location.host + '/ws?role=' + (WANT_ENGINE ? 'engine' : 'panel'));
+  ws.onopen = () => { connected = true; renderStatus(); };
+  ws.onmessage = (e) => { try { handle(JSON.parse(e.data)); } catch (err) { console.error(err); } };
+  ws.onclose = () => { connected = false; renderStatus(); setTimeout(connect, 1500); };
+}
+
+function handle(m) {
+  if (m.t === 'hello') {
+    role = m.role; duplicate = !!m.duplicate; trayAvailable = !!m.tray; platform = m.platform || ''; setTimeout(maybeFirstHelp, 300);
+    config = m.config; nextRun = m.next; engineOnline = m.engineOnline; update = m.update || null;
+    if (role === 'engine') { Engine.init(); Engine.applyConfig(); Engine.report(); } else runtime = m.runtime || {};
+    renderAll(); renderUpdate();
+  } else if (m.t === 'config') {
+    config = m.config; nextRun = m.next;
+    if (role === 'engine') { Engine.applyConfig(); Engine.report(); }
+    renderAll();
+  } else if (m.t === 'runtime') {
+    if (role !== 'engine') runtime = m.runtime || {};
+    engineOnline = m.engineOnline;
+    if (m.tray != null) trayAvailable = !!m.tray;
+    renderStreams(); renderStatus(); renderUpdate();
+  } else if (m.t === 'ping') {
+    send({ t: 'pong' });
+  } else if (m.t === 'cmd') {
+    if (role !== 'engine') return;
+    // каждая команда выполняется один раз, даже если сервер прислал её повторно
+    if (m.seq) {
+      if (seenCmds.has(m.seq)) { send({ t: 'ack', seq: m.seq, dup: true }); return; }
+      seenCmds.add(m.seq);
+      if (seenCmds.size > 500) seenCmds.delete(seenCmds.values().next().value);
+      send({ t: 'ack', seq: m.seq });
+    }
+    if (m.at && Date.now() - m.at > 30000) return; // слишком старая команда (окно было «заморожено»)
+    Engine.exec(m);
+  } else if (m.t === 'update') {
+    update = m.update; renderUpdate();
+  } else if (m.t === 'saved') {
+    toast('Сохранено');
+  } else if (m.t === 'saveError') {
+    toast(m.msg || 'Не удалось сохранить');
+  } else if (m.t === 'folderPicked') {
+    onFolderPicked(m);
+  } else if (m.t === 'quit') {
+    if (role === 'engine') { Engine.exec({ cmd: 'stopAll', fade: 0.4 }); quitting = true; setTimeout(() => window.close(), 600); }
+  }
+}
+
+// ================= движок звука (только в окне ?engine=1) =================
+const Engine = (() => {
+  let ctx = null;
+  const ch = {};
+  const curve = (v) => Math.pow(clamp(v, 0, 100) / 100, 2);
+  const cfg = (id) => config.streams.find((s) => s.id === id);
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  function init() {
+    if (ctx) return;
+    // держим «замок», чтобы браузеру было сложнее усыпить страницу в фоне
+    try { if (navigator.locks) navigator.locks.request('polyplayer-engine-keepalive', () => new Promise(() => {})).catch(() => {}); } catch (e) { /* нет поддержки */ }
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const unlock = () => { if (ctx.state !== 'running') ctx.resume().catch(() => {}); };
+    document.addEventListener('pointerdown', unlock);
+    $('#unlock').addEventListener('click', unlock);
+    setInterval(() => {
+      const anyActive = Object.values(ch).some((c) => c.state === 'playing');
+      $('#unlock').hidden = !(ctx.state !== 'running' && anyActive);
+    }, 700);
+  }
+
+  // у каждого потока две «деки» (два плеера) — чтобы делать плавный переход между треками
+  function makeDeck(c) {
+    const audio = new Audio();
+    audio.preload = 'auto';
+    const src = ctx.createMediaElementSource(audio);
+    const g = ctx.createGain();
+    g.gain.value = 0;
+    src.connect(g);
+    g.connect(c.gain);
+    const d = { audio, g };
+    audio.addEventListener('ended', () => onEnded(c, d));
+    audio.addEventListener('error', () => onError(c, d));
+    audio.addEventListener('playing', () => { c.errors = 0; });
+    audio.addEventListener('timeupdate', () => onTime(c, d));
+    return d;
+  }
+
+  function get(id) {
+    if (ch[id]) return ch[id];
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    gain.connect(ctx.destination);
+    const c = {
+      id, gain, state: 'stopped', tracks: [], queue: [], pos: 0, track: '', error: '', op: 0, timer: null, errors: 0,
+      fade: { from: 0, to: 0, t0: 0, dur: 0.001 }, decks: [], cur: 0, xf: null,
+      get deck() { return this.decks[this.cur]; },
+      get audio() { return this.decks[this.cur].audio; }
+    };
+    c.decks = [makeDeck(c), makeDeck(c)];
+    c.decks[0].g.gain.value = 1;
+    ch[id] = c;
+    return c;
+  }
+
+  function setDeckGain(d, v) {
+    const g = d.g.gain;
+    const t = ctx.currentTime;
+    g.cancelScheduledValues(0);
+    g.setValueAtTime(v, t);
+  }
+
+  function clearDeck(d) {
+    d.audio.pause();
+    d.audio.removeAttribute('src');
+    d.audio.load();
+    setDeckGain(d, 0);
+  }
+
+  // мгновенно завершить идущий переход между треками
+  function finishXfade(c) {
+    if (!c.xf) return;
+    clearTimeout(c.xf.timer);
+    const old = c.xf.old;
+    c.xf = null;
+    clearDeck(old);
+    setDeckGain(c.deck, 1);
+  }
+
+  // кроссфейд: за N секунд до конца трека запускаем следующий на второй деке
+  function onTime(c, d) {
+    if (d !== c.deck || c.state !== 'playing' || c.xf) return;
+    const s = cfg(c.id);
+    const x = s ? Number(s.crossfade) || 0 : 0;
+    if (x <= 0) return;
+    const a = d.audio;
+    const dur = a.duration;
+    if (!isFinite(dur) || dur < x * 2 + 1) return;
+    if (dur - a.currentTime > x) return;
+    if (!canAdvance(c)) return; // последний трек без повтора — пусть доиграет
+    advance(c);
+    const old = d;
+    c.cur = 1 - c.cur;
+    const nd = c.deck;
+    const rel = c.tracks[c.queue[c.pos]];
+    nd.audio.src = '/media/' + encodeURIComponent(c.id) + '?f=' + encodeURIComponent(rel);
+    c.track = title(rel);
+    setDeckGain(nd, 0);
+    nd.audio.play().catch(() => {});
+    const n = Math.max(16, Math.min(400, Math.round(x * 30)));
+    const up = new Float32Array(n), down = new Float32Array(n);
+    const from = old.g.gain.value;
+    for (let i = 0; i < n; i++) { const p = i / (n - 1); up[i] = Math.sin(p * Math.PI / 2); down[i] = from * Math.cos(p * Math.PI / 2); }
+    const t = ctx.currentTime + 0.03;
+    nd.g.gain.cancelScheduledValues(0); nd.g.gain.setValueAtTime(0, ctx.currentTime); nd.g.gain.setValueCurveAtTime(up, t, x);
+    old.g.gain.cancelScheduledValues(0); old.g.gain.setValueAtTime(from, ctx.currentTime); old.g.gain.setValueCurveAtTime(down, t, x);
+    c.xf = { old, timer: setTimeout(() => { if (c.xf && c.xf.old === old) finishXfade(c); }, x * 1000 + 400) };
+    report();
+  }
+
+  function curGain(c) {
+    const f = c.fade;
+    const t = ctx.currentTime;
+    if (t >= f.t0 + f.dur) return f.to;
+    if (t <= f.t0) return f.from;
+    const p = (t - f.t0) / f.dur;
+    const a = Math.sqrt(f.from), b = Math.sqrt(f.to);
+    const x = a + (b - a) * p;
+    return x * x;
+  }
+
+  // плавное изменение громкости по «слуховой» кривой
+  function fadeTo(c, to, sec) {
+    const g = c.gain.gain;
+    const now = ctx.currentTime;
+    const from = curGain(c);
+    g.cancelScheduledValues(now);
+    g.setValueAtTime(from, now);
+    if (!(sec > 0.03) || Math.abs(from - to) < 1e-4) {
+      g.setValueAtTime(to, now + 0.002);
+      c.fade = { from: to, to, t0: now, dur: 0.001 };
+      return;
+    }
+    const n = Math.max(8, Math.min(300, Math.round(sec * 40)));
+    const arr = new Float32Array(n);
+    const a = Math.sqrt(from), b = Math.sqrt(to);
+    for (let i = 0; i < n; i++) { const x = a + (b - a) * (i / (n - 1)); arr[i] = x * x; }
+    g.setValueCurveAtTime(arr, now + 0.005, sec);
+    c.fade = { from, to, t0: now + 0.005, dur: sec };
+  }
+
+  const title = (rel) => (rel || '').split('/').pop().replace(/\.[^.]+$/, '');
+  function shuffled(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function makeQueue(c, avoidFirst) {
+    const s = cfg(c.id);
+    const n = c.tracks.length;
+    c.queue = s && s.shuffle ? shuffled(n) : [...Array(n).keys()];
+    if (avoidFirst != null && n > 1 && c.queue[0] === avoidFirst) {
+      const k = 1 + Math.floor(Math.random() * (n - 1));
+      [c.queue[0], c.queue[k]] = [c.queue[k], c.queue[0]];
+    }
+    c.pos = 0;
+  }
+  function loadCurrent(c) {
+    finishXfade(c);
+    const rel = c.tracks[c.queue[c.pos]];
+    c.audio.src = '/media/' + encodeURIComponent(c.id) + '?f=' + encodeURIComponent(rel);
+    c.track = title(rel);
+    setDeckGain(c.deck, 1);
+  }
+  // случайная точка старта: только для треков от 3 минут, не ближе 2 минут к концу
+  function seekRandom(c) {
+    const a = c.audio;
+    return new Promise((resolve) => {
+      let done = false;
+      const go = () => {
+        if (done) return;
+        done = true;
+        a.removeEventListener('loadedmetadata', go);
+        const dur = a.duration;
+        if (isFinite(dur) && dur >= 180) { try { a.currentTime = Math.random() * (dur - 120); } catch (e) { /* ignore */ } }
+        resolve();
+      };
+      if (a.readyState >= 1) go();
+      else { a.addEventListener('loadedmetadata', go); setTimeout(go, 4000); }
+    });
+  }
+  function canAdvance(c) {
+    const s = cfg(c.id);
+    return c.pos + 1 < c.queue.length || !(s && !s.loop);
+  }
+  function advance(c) {
+    if (!canAdvance(c)) return false;
+    c.pos++;
+    if (c.pos >= c.queue.length) {
+      const s = cfg(c.id);
+      if (s && !s.loop) return false;
+      makeQueue(c, c.queue[c.queue.length - 1]);
+    }
+    return true;
+  }
+
+  async function play(c, fade) {
+    const s = cfg(c.id);
+    if (!s) return;
+    clearTimeout(c.timer);
+    const my = ++c.op;
+    if (config.solo !== false) { // общая настройка «играет только один поток»
+      for (const o of Object.values(ch)) if (o !== c && o.state === 'playing') { const os = cfg(o.id); pause(o, os ? os.fadeOut : 2); }
+    }
+    const wasStopped = c.state === 'stopped' || !c.audio.getAttribute('src');
+    c.state = 'playing'; c.error = '';
+    report();
+    if (wasStopped) {
+      let list = [];
+      try { const r = await fetch('/api/tracks/' + encodeURIComponent(c.id), { cache: 'no-store' }); list = (await r.json()).tracks || []; } catch (e) { /* сеть */ }
+      if (my !== c.op) return;
+      c.tracks = list;
+      if (!list.length) { c.state = 'stopped'; c.error = 'В папке нет треков'; report(); return; }
+      makeQueue(c);
+      loadCurrent(c);
+      fadeTo(c, 0, 0);
+      c.errors = 0;
+      if (s.randomStart) { await seekRandom(c); if (my !== c.op) return; }
+    }
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
+    try { await c.audio.play(); }
+    catch (e) {
+      if (my !== c.op || e.name === 'AbortError') return;
+      c.error = 'Не удалось запустить (' + e.name + ')'; c.state = 'paused'; report(); return;
+    }
+    if (my !== c.op) return;
+    fadeTo(c, curve(s.volume), fade != null ? fade : s.fadeIn);
+    report();
+  }
+
+  function pause(c, fade) {
+    if (c.state !== 'playing') return;
+    const s = cfg(c.id) || { fadeOut: 2 };
+    const f = fade != null ? fade : s.fadeOut;
+    ++c.op;
+    finishXfade(c);
+    c.state = 'paused';
+    fadeTo(c, 0, f);
+    clearTimeout(c.timer);
+    c.timer = setTimeout(() => { if (c.state === 'paused') c.audio.pause(); }, f * 1000 + 80);
+    report();
+  }
+
+  function stop(c, fade) {
+    if (c.state === 'stopped') return;
+    const s = cfg(c.id) || { fadeOut: 2 };
+    const f = c.state === 'paused' ? 0 : (fade != null ? fade : s.fadeOut);
+    ++c.op;
+    c.state = 'stopped';
+    fadeTo(c, 0, f);
+    finishXfade(c);
+    clearTimeout(c.timer);
+    c.timer = setTimeout(() => {
+      if (c.state !== 'stopped') return;
+      finishXfade(c);
+      c.audio.pause(); c.audio.removeAttribute('src'); c.audio.load(); c.track = '';
+      report();
+    }, f * 1000 + 80);
+    report();
+  }
+
+  async function next(c) {
+    if (c.state === 'stopped') return play(c);
+    if (!c.tracks.length) return;
+    const my = ++c.op;
+    finishXfade(c);
+    if (c.state === 'playing') {
+      fadeTo(c, 0, 0.35);
+      await sleep(380);
+      if (my !== c.op) return;
+      if (!advance(c)) { stop(c, 0); return; }
+      loadCurrent(c);
+      report();
+      try { await c.audio.play(); } catch (e) { /* ignore */ }
+      if (my !== c.op) return;
+      const s = cfg(c.id);
+      fadeTo(c, curve(s ? s.volume : 50), 0.6);
+    } else {
+      if (!advance(c)) { stop(c, 0); return; }
+      loadCurrent(c);
+    }
+    report();
+  }
+
+  function onEnded(c, d) {
+    if (d !== c.deck) return; // старая дека после перехода
+    if (c.state !== 'playing') return;
+    if (!advance(c)) { c.state = 'stopped'; c.track = ''; fadeTo(c, 0, 0); c.audio.removeAttribute('src'); report(); return; }
+    loadCurrent(c);
+    c.audio.play().catch(() => {});
+    report();
+  }
+
+  function onError(c, d) {
+    if (d !== c.deck) { if (c.xf && c.xf.old === d) finishXfade(c); return; }
+    if (!c.audio.getAttribute('src')) return;
+    c.errors++;
+    if (c.errors >= Math.max(3, c.tracks.length)) { c.error = 'Файлы не читаются'; stop(c, 0); return; }
+    if (c.state === 'playing') {
+      setTimeout(() => {
+        if (c.state !== 'playing') return;
+        if (advance(c)) { loadCurrent(c); c.audio.play().catch(() => {}); report(); }
+      }, 300);
+    }
+  }
+
+  function exec(m) {
+    if (m.cmd === 'stopAll') { for (const c of Object.values(ch)) stop(c, m.fade); return; }
+    if (!cfg(m.id)) return;
+    const c = get(m.id);
+    switch (m.cmd) {
+      case 'play': play(c, m.fade); break;
+      case 'pause': pause(c, m.fade); break;
+      case 'toggle': if (c.state === 'playing') pause(c, m.fade); else play(c, m.fade); break;
+      case 'stop': stop(c, m.fade); break;
+      case 'next': next(c); break;
+      case 'seek': seek(c.id, m.value); break;
+      default: break;
+    }
+  }
+
+  // позиция и длина текущего трека — для полосы перемотки
+  function progress(id) {
+    const c = ch[id];
+    if (!c || !c.audio.getAttribute('src')) return null;
+    const a = c.audio;
+    return { t: a.currentTime || 0, dur: isFinite(a.duration) ? a.duration : 0 };
+  }
+
+  function seek(id, sec) {
+    const c = ch[id];
+    if (!c || !c.audio.getAttribute('src')) return;
+    finishXfade(c);
+    const a = c.audio;
+    if (!isFinite(a.duration)) return;
+    try { a.currentTime = clamp(Number(sec) || 0, 0, Math.max(0, a.duration - 0.5)); } catch (e) { /* ignore */ }
+  }
+
+  function applyConfig() {
+    for (const c of Object.values(ch)) {
+      const s = cfg(c.id);
+      if (!s) { stop(c, 0.3); continue; }
+      if (c.state !== 'playing') continue;
+      const target = curve(s.volume);
+      if (Math.abs(c.fade.to - target) < 1e-4) continue;
+      const left = c.fade.t0 + c.fade.dur - ctx.currentTime;
+      fadeTo(c, target, left > 0.15 ? left : 0.08);
+    }
+  }
+
+  function snapshot() {
+    const out = {};
+    for (const s of config.streams) {
+      const c = ch[s.id];
+      out[s.id] = c ? { state: c.state, track: c.track, pos: c.pos + 1, total: c.tracks.length, error: c.error } : { state: 'stopped', track: '', pos: 0, total: 0, error: '' };
+    }
+    return out;
+  }
+
+  function report() {
+    runtime = snapshot();
+    send({ t: 'state', streams: runtime });
+    renderStreams();
+  }
+
+  return { init, exec, applyConfig, report, progress, seek, debug: () => ({ ctx, ch, curGain }) };
+})();
+
+// ================= интерфейс =================
+const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+const pad2 = (n) => String(n).padStart(2, '0');
+const fmtTime = (sec) => { if (!isFinite(sec) || sec < 0) return '0:00'; sec = Math.floor(sec); const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, s = sec % 60; return (h ? h + ':' + pad2(m) : m) + ':' + pad2(s); };
+const setP = (r) => r.style.setProperty('--p', ((r.value - r.min) / (r.max - r.min) * 100) + '%');
+
+// вставляем иконки в разметку (ICON:имя)
+document.querySelectorAll('button, p.note').forEach((el) => {
+  if (el.innerHTML.includes('ICON:')) el.innerHTML = el.innerHTML.replace(/ICON:(\w+)/g, (m, k) => ICON[k] || '');
+});
+
+function renderAll() { renderStatus(); renderStreams(); renderSchedules(); renderSettings(); }
+
+// ---------- вкладки ----------
+let tab = 'streams';
+try { tab = localStorage.getItem('ppTab') || 'streams'; } catch (e) { /* нет хранилища */ }
+function showTab(t) {
+  tab = t;
+  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('.pane').forEach((p) => { p.hidden = p.dataset.pane !== t; });
+  try { localStorage.setItem('ppTab', t); } catch (e) { /* нет хранилища */ }
+}
+document.querySelectorAll('#tabs button').forEach((b) => { b.onclick = () => showTab(b.dataset.tab); });
+showTab(['streams', 'sched', 'settings'].includes(tab) ? tab : 'streams');
+
+// ---------- часы ----------
+function tickClock() {
+  const d = new Date();
+  $('#clkTime').textContent = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  $('#clkDay').textContent = DAY_LONG[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
+}
+tickClock();
+setInterval(tickClock, 5000);
+
+// ---------- статус ----------
+function renderStatus() {
+  const conn = $('#conn');
+  if (!connected) { conn.className = 'off'; conn.innerHTML = '<i></i>нет связи'; }
+  else if (role === 'engine' || engineOnline) { conn.className = ''; conn.innerHTML = '<i></i>работает'; }
+  else { conn.className = 'off'; conn.innerHTML = '<i></i>проигрыватель закрыт'; }
+
+  const playing = config.streams.filter((s) => runtime[s.id] && runtime[s.id].state === 'playing');
+  const pill = $('#nowPill');
+  if (playing.length) {
+    const s = playing[0];
+    const rt = runtime[s.id];
+    pill.style.setProperty('--c', s.color);
+    pill.innerHTML = '<span class="eq"><i></i><i></i><i></i></span><span class="tr">Играет <b>' + esc(s.name) + '</b>' +
+      (playing.length > 1 ? ' и ещё ' + (playing.length - 1) : (rt.track ? ' · ' + esc(rt.track) : '')) + '</span>';
+    document.body.style.setProperty('--glow', s.color);
+  } else {
+    pill.style.removeProperty('--c');
+    pill.innerHTML = '<span class="tr">Сейчас тишина</span>';
+    document.body.style.setProperty('--glow', 'transparent');
+  }
+
+  let banner = '';
+  if (!connected) banner = '<div class="banner warn"><b>Нет связи с проигрывателем.</b> Переподключаюсь…</div>';
+  else if (duplicate && WANT_ENGINE) banner = '<div class="banner warn">Проигрыватель уже открыт в другом окне, это окно работает как пульт. Его можно закрыть.</div>';
+  else if (role !== 'engine' && !engineOnline) banner = '<div class="banner">Окно-проигрыватель закрыто — оно откроется само при включении потока. <a href="#" id="openEng">Открыть сейчас</a></div>';
+  $('#banner').innerHTML = banner;
+  const oe = $('#openEng');
+  if (oe) oe.onclick = (e) => { e.preventDefault(); send({ t: 'openEngine' }); toast('Открываю проигрыватель…'); };
+  $('#cntStreams').textContent = config.streams.length || '';
+  $('#cntSched').textContent = config.schedules.length || '';
+}
+
+// ---------- потоки ----------
+const STATE_LABEL = { playing: 'Играет', paused: 'Пауза', stopped: 'Остановлен' };
+
+function streamMeta(s) {
+  const folder = s.folder ? s.folder.split(/[\\/]/).filter(Boolean).pop() : 'папка не выбрана';
+  const bits = ['<span class="tag">' + ICON.folder + esc(folder) + '</span>'];
+  bits.push('<span class="tag">плавно ' + s.fadeIn + ' / ' + s.fadeOut + ' с</span>');
+  if (s.crossfade > 0) bits.push('<span class="tag">переход ' + s.crossfade + ' с</span>');
+  if (s.shuffle) bits.push('<span class="tag">' + ICON.shuffle + 'перемешать</span>');
+  if (s.randomStart) bits.push('<span class="tag">с любого места</span>');
+  if (!s.loop) bits.push('<span class="tag">один проход</span>');
+  return bits.join('');
+}
+
+function makeCard(s) {
+  const el = document.createElement('article');
+  el.className = 'card';
+  el.dataset.id = s.id;
+  el.innerHTML =
+    '<div class="row1"><span class="dot"></span><span class="name"></span>' +
+    '<span class="tools"><button class="tb mv-l" title="Переместить левее">' + ICON.left + '</button>' +
+    '<button class="tb mv-r" title="Переместить правее">' + ICON.right + '</button>' +
+    '<button class="tb edit" title="Настройки потока">' + ICON.edit + '</button></span></div>' +
+    '<div class="st"></div>' +
+    '<div class="track"></div>' +
+    '<input type="range" class="seek" min="0" max="1000" step="1" value="0" aria-label="Позиция в треке">' +
+    '<div class="times"><span class="t-cur">0:00</span><span class="t-dur"></span></div>' +
+    '<div class="ctl"><button class="play toggle" title="Включить / пауза"></button>' +
+    '<button class="ib next" title="Следующий трек">' + ICON.next + '</button>' +
+    '<button class="ib stop" title="Остановить (в следующий раз — с начала)">' + ICON.stop + '</button>' +
+    '<div class="vol">' + ICON.vol + '<input type="range" class="volr" min="0" max="100" step="1" aria-label="Громкость"><span class="vv"></span></div></div>' +
+    '<div class="meta"></div>';
+  $('.toggle', el).onclick = () => cmd('toggle', s.id);
+  $('.next', el).onclick = () => cmd('next', s.id);
+  $('.stop', el).onclick = () => cmd('stop', s.id);
+  $('.edit', el).onclick = () => openEditor(s.id);
+  $('.mv-l', el).onclick = () => send({ t: 'moveStream', id: s.id, dir: -1 });
+  $('.mv-r', el).onclick = () => send({ t: 'moveStream', id: s.id, dir: 1 });
+  // громкость
+  const r = $('.volr', el);
+  let last = 0;
+  r.addEventListener('input', () => {
+    setP(r);
+    $('.vv', el).textContent = r.value + '%';
+    const now = Date.now();
+    if (now - last > 40) { last = now; cmd('volume', s.id, { value: +r.value }); }
+    clearTimeout(r.tm); r.tm = setTimeout(() => cmd('volume', s.id, { value: +r.value }), 60);
+  });
+  r.addEventListener('pointerdown', () => { r.dragging = true; });
+  r.addEventListener('pointerup', () => { r.dragging = false; });
+  // перемотка
+  const sk = $('.seek', el);
+  sk.addEventListener('input', () => {
+    sk.dragging = true;
+    setP(sk);
+    const dur = +sk.dataset.dur || 0;
+    $('.t-cur', el).textContent = fmtTime(dur * sk.value / 1000);
+  });
+  sk.addEventListener('change', () => {
+    const dur = +sk.dataset.dur || 0;
+    const sec = dur * sk.value / 1000;
+    if (role === 'engine') Engine.seek(s.id, sec); else cmd('seek', s.id, { value: sec });
+    setTimeout(() => { sk.dragging = false; }, 300);
+  });
+  return el;
+}
+
+function renderStreams() {
+  const box = $('#streams');
+  let add = $('#addStream');
+  if (!add) {
+    add = document.createElement('button');
+    add.className = 'add-card';
+    add.id = 'addStream';
+    add.innerHTML = ICON.plus + 'Новый поток';
+    add.onclick = () => openEditor(null);
+  }
+  const ids = config.streams.map((s) => s.id);
+  for (const el of [...box.querySelectorAll('.card')]) if (!ids.includes(el.dataset.id)) el.remove();
+  config.streams.forEach((s, i) => {
+    let el = box.querySelector('.card[data-id="' + s.id + '"]');
+    if (!el) el = makeCard(s);
+    if (box.children[i] !== el) box.insertBefore(el, box.children[i] || null);
+    const rt = runtime[s.id] || { state: 'stopped' };
+    const st = rt.state || 'stopped';
+    el.className = 'card ' + st;
+    el.style.setProperty('--c', s.color);
+    $('.name', el).textContent = s.name;
+    $('.st', el).textContent = STATE_LABEL[st] + (rt.total && st !== 'stopped' ? ' · трек ' + rt.pos + ' из ' + rt.total : '');
+    const tr = $('.track', el);
+    tr.className = 'track' + (rt.error ? ' err' : (rt.track ? '' : ' idle'));
+    tr.textContent = rt.error || rt.track || (s.folder ? 'Нажмите ▶, чтобы включить' : 'Выберите папку в настройках потока');
+    $('.toggle', el).innerHTML = st === 'playing' ? ICON.pause : ICON.play;
+    const r = $('.volr', el);
+    if (!r.dragging && document.activeElement !== r) { r.value = s.volume; $('.vv', el).textContent = s.volume + '%'; }
+    setP(r);
+    $('.meta', el).innerHTML = streamMeta(s);
+    $('.mv-l', el).style.visibility = i === 0 ? 'hidden' : '';
+    $('.mv-r', el).style.visibility = i === config.streams.length - 1 ? 'hidden' : '';
+  });
+  box.appendChild(add); // карточка «Новый поток» всегда последняя
+  renderStatus();
+  updateProgress();
+}
+
+// позиция в треке — видна в окне-проигрывателе (звук играет именно здесь)
+function updateProgress() {
+  for (const s of config.streams) {
+    const el = document.querySelector('.card[data-id="' + s.id + '"]');
+    if (!el) continue;
+    const sk = $('.seek', el);
+    const rt = runtime[s.id] || {};
+    const p = role === 'engine' && rt.state !== 'stopped' ? Engine.progress(s.id) : null;
+    if (!p || !p.dur) {
+      sk.disabled = true; sk.value = 0; setP(sk);
+      $('.t-cur', el).textContent = rt.state && rt.state !== 'stopped' && role !== 'engine' ? '' : '0:00';
+      $('.t-dur', el).textContent = '';
+      continue;
+    }
+    sk.disabled = false;
+    sk.dataset.dur = p.dur;
+    if (!sk.dragging) {
+      sk.value = Math.round(p.t / p.dur * 1000); setP(sk);
+      $('.t-cur', el).textContent = fmtTime(p.t);
+    }
+    $('.t-dur', el).textContent = fmtTime(p.dur);
+  }
+}
+setInterval(updateProgress, 250);
+
+// ---------- расписание ----------
+function renderNextRun() {
+  if (!nextRun) { $('#nextRun').innerHTML = config.schedules.length ? 'Ближайших событий нет — проверьте дни и переключатели.' : 'Правила включают и выключают музыку сами, в нужные дни и время.'; return; }
+  const d = new Date(nextRun.at);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - today) / 86400000);
+  const when = diff === 0 ? 'сегодня' : diff === 1 ? 'завтра' : DAY_LONG[d.getDay()];
+  if (nextRun.kind === 'stop') $('#nextRun').innerHTML = 'Следующее: <b>' + when + ', стоп в ' + esc(nextRun.end) + '</b> — ' + esc(nextRun.name);
+  else $('#nextRun').innerHTML = 'Следующее: <b>' + when + ', ' + esc(nextRun.start) + (nextRun.end ? '–' + esc(nextRun.end) : '') + '</b> — ' + esc(nextRun.name);
+}
+
+function schedMode(sc) {
+  if (!sc.start && !sc.end) return 'укажите время';
+  if (sc.start && sc.end && sc.end <= sc.start) return '«до» раньше «с» — не сработает';
+  return '';
+}
+
+function schedFromDom() {
+  return [...document.querySelectorAll('.srow')].map((row) => ({
+    id: row.dataset.id,
+    streamId: $('select', row).value,
+    days: [...row.querySelectorAll('.day.on')].map((b) => +b.dataset.d),
+    // для «все потоки» старт не задаётся
+    start: $('select', row).value === '*' ? '' : $('.t-start', row).value,
+    end: $('.t-end', row).value,
+    enabled: $('.en', row).checked
+  }));
+}
+function saveSchedules() { send({ t: 'saveSchedules', schedules: schedFromDom() }); }
+
+function renderSchedules() {
+  renderNextRun();
+  const box = $('#sched');
+  if (box.contains(document.activeElement) && document.activeElement.tagName === 'INPUT' && document.activeElement.type === 'time') return;
+  const opts = '<option value="*">Все потоки</option>' + config.streams.map((s) => '<option value="' + s.id + '">' + esc(s.name) + '</option>').join('');
+  box.innerHTML = '';
+  box.style.display = config.schedules.length ? '' : 'none';
+  if (!config.schedules.length) {
+    box.insertAdjacentHTML('afterend', '');
+    if (!$('#schedEmpty')) box.insertAdjacentHTML('beforebegin', '<div class="empty" id="schedEmpty">Правил пока нет. Например: «ПЕРЕРЫВ», воскресенье, с 09:40 до 09:55.</div>');
+    return;
+  }
+  const emp = $('#schedEmpty'); if (emp) emp.remove();
+  for (const sc of config.schedules) {
+    const row = document.createElement('div');
+    row.className = 'srow' + (sc.enabled ? '' : ' off');
+    row.dataset.id = sc.id;
+    row.innerHTML =
+      '<select title="Поток">' + opts + '</select>' +
+      '<div class="days">' + DAY_ORDER.map((d) => '<button type="button" class="day' + (sc.days.includes(d) ? ' on' : '') + '" data-d="' + d + '">' + DAY_SHORT[d] + '</button>').join('') + '</div>' +
+      '<div class="times2"><span>с</span><span class="tbox"><input type="time" class="t-start" value="' + esc(sc.start) + '"><button type="button" class="tclr" data-t="t-start" title="Убрать время">×</button></span>' +
+      '<span>до</span><span class="tbox"><input type="time" class="t-end" value="' + esc(sc.end) + '"><button type="button" class="tclr" data-t="t-end" title="Убрать время">×</button></span></div>' +
+      '<span class="mode">' + schedMode(sc) + '</span>' +
+      '<span class="switch del-sw" title="Правило включено"><input type="checkbox" class="en"' + (sc.enabled ? ' checked' : '') + '><span></span></span>' +
+      '<button class="tb del" title="Удалить правило">' + ICON.trash + '</button>';
+    $('select', row).value = sc.streamId;
+    const color = (config.streams.find((x) => x.id === sc.streamId) || {}).color;
+    if (color) $('select', row).style.boxShadow = 'inset 3px 0 0 ' + color;
+    if (sc.streamId === '*') { // «все потоки» — только время остановки
+      const ts = $('.t-start', row);
+      ts.value = ''; ts.disabled = true; ts.title = 'Для «Все потоки» задаётся только время остановки';
+    }
+    row.querySelectorAll('.day').forEach((b) => { b.onclick = () => { b.classList.toggle('on'); saveSchedules(); }; });
+    $('select', row).onchange = saveSchedules;
+    $('.en', row).onchange = saveSchedules;
+    row.querySelectorAll('input[type=time]').forEach((t) => { t.onchange = saveSchedules; t.onblur = () => setTimeout(renderSchedules, 50); });
+    $('.del', row).onclick = () => { row.remove(); saveSchedules(); };
+    row.querySelectorAll('.tclr').forEach((b) => {
+      b.hidden = !$('.' + b.dataset.t, row).value;
+      b.onclick = () => { $('.' + b.dataset.t, row).value = ''; saveSchedules(); };
+    });
+    box.appendChild(row);
+  }
+  // переключатель стоит перед корзиной — корзину сдвигаем вправо
+  box.querySelectorAll('.srow .del-sw').forEach((sw) => { sw.style.marginLeft = 'auto'; });
+  box.querySelectorAll('.srow .del').forEach((d) => { d.style.marginLeft = '0'; });
+}
+
+$('#addSched').onclick = () => {
+  if (!config.streams.length) { toast('Сначала создайте поток'); return; }
+  const list = schedFromDom();
+  list.push({ streamId: config.streams[0].id, days: [0], start: '09:40', end: '09:55', enabled: true });
+  send({ t: 'saveSchedules', schedules: list });
+};
+
+// ---------- настройки ----------
+function renderSettings() {
+  $('#autoOpen').checked = config.autoOpen !== false;
+  $('#soloAll').checked = config.solo !== false;
+}
+// ---------- обновления ----------
+let update = null;
+function anyPlaying() { return Object.values(runtime || {}).some((r) => r && r.state === 'playing'); }
+function renderUpdate() {
+  const box = $('#updBox'); if (!box) return;
+  const u = update;
+  box.hidden = !u;
+  if (!u) return;
+  const btn = $('#updBtn'), txt = $('#updText');
+  let t = 'Установлена версия ' + u.current + '. ';
+  btn.hidden = false; btn.disabled = false; btn.textContent = 'Проверить'; btn.dataset.cmd = 'check'; btn.classList.remove('go');
+  if (u.status === 'checking') { t += 'Проверяю…'; btn.disabled = true; }
+  else if (u.status === 'latest') t += 'Это последняя версия.';
+  else if (u.status === 'downloading') { t += 'Скачиваю версию ' + u.version + '… ' + (u.progress || 0) + '%'; btn.disabled = true; }
+  else if (u.status === 'ready') {
+    t += 'Готова версия ' + u.version + '.';
+    btn.textContent = 'Установить ' + u.version; btn.dataset.cmd = 'install'; btn.classList.add('go');
+    if (anyPlaying()) { btn.disabled = true; t += ' Остановите музыку, чтобы установить — программа перезапустится на несколько секунд.'; }
+    else t += ' Программа закроется на несколько секунд и откроется снова.';
+  } else if (u.status === 'error') t += 'Не удалось проверить обновления' + (u.error ? ': ' + u.error : '') + '.';
+  else if (u.status === 'off') { t += 'Обновления не настроены.'; btn.hidden = true; }
+  txt.textContent = t;
+  const dot = document.querySelector('#tabs button[data-tab="settings"] .updot');
+  if (dot) dot.hidden = u.status !== 'ready';
+}
+$('#updBtn').onclick = () => send({ t: 'updateCmd', cmd: $('#updBtn').dataset.cmd || 'check' });
+$('#autoOpen').onchange = () => send({ t: 'saveSettings', autoOpen: $('#autoOpen').checked });
+$('#soloAll').onchange = () => send({ t: 'saveSettings', solo: $('#soloAll').checked });
+
+// ---------- редактор потока ----------
+let editing = null;
+let pickColor = COLORS[0];
+const dlg = $('#editDlg');
+
+function openEditor(id) {
+  const s = id ? config.streams.find((x) => x.id === id) : null;
+  editing = s ? s.id : null;
+  $('#editTitle').textContent = s ? 'Настройки потока' : 'Новый поток';
+  $('#fName').value = s ? s.name : '';
+  $('#fFolder').value = s ? s.folder : '';
+  $('#fIn').value = s ? s.fadeIn : 3;
+  $('#fOut').value = s ? s.fadeOut : 3;
+  $('#fXf').value = s ? (s.crossfade != null ? s.crossfade : 5) : 5;
+  $('#fShuffle').checked = s ? s.shuffle : true;
+  $('#fRandStart').checked = s ? !!s.randomStart : false;
+  $('#fLoop').checked = s ? s.loop : true;
+  pickColor = s ? s.color : COLORS[config.streams.length % COLORS.length];
+  $('#delBtn').style.visibility = s ? '' : 'hidden';
+  renderSwatches();
+  checkFolder();
+  $('#editView').hidden = false; $('#browseView').hidden = true;
+  dlg.showModal();
+  if (!s) $('#fName').focus();
+}
+// предпросмотр кнопки Stream Deck и проверка длины названия
+function renderKeyPreview() {
+  const r = KeyName.check($('#fName').value);
+  const hint = $('#nameHint');
+  hint.className = 'name-hint' + (r.ok || !$('#fName').value.trim() ? '' : ' bad');
+  hint.textContent = r.ok || !$('#fName').value.trim() ? 'Одно или два слова, примерно до 7 букв в слове' : r.error;
+  $('#keyPrev').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144"><rect width="144" height="144" fill="#1E2A44"/>' +
+    '<rect width="144" height="10" fill="' + pickColor + '"/><path d="M12 20l18 9l-18 9z" fill="' + pickColor + '"/>' +
+    '<circle cx="124" cy="29" r="8" fill="' + pickColor + '"/>' + KeyName.textSvg(r.lines, 72, 44, 114, '#F2E6CC') +
+    '<rect x="12" y="122" width="120" height="10" rx="5" fill="#000" fill-opacity="0.45"/><rect x="12" y="122" width="72" height="10" rx="5" fill="' + pickColor + '"/></svg>';
+  return r;
+}
+$('#fName').addEventListener('input', renderKeyPreview);
+function renderSwatches() {
+  $('#swatches').innerHTML = COLORS.map((c) => '<button type="button" class="swc' + (c === pickColor ? ' on' : '') + '" style="background:' + c + '" data-c="' + c + '"></button>').join('');
+  $('#swatches').querySelectorAll('.swc').forEach((b) => { b.onclick = () => { pickColor = b.dataset.c; renderSwatches(); }; });
+  renderKeyPreview();
+}
+async function checkFolder() {
+  const p = $('#fFolder').value.trim();
+  const info = $('#folderInfo');
+  if (!p) { info.className = 'folder-info'; info.textContent = ''; return; }
+  info.className = 'folder-info'; info.textContent = 'Проверяю…';
+  try {
+    const r = await (await fetch('/api/scan?path=' + encodeURIComponent(p))).json();
+    if (r.count) { info.className = 'folder-info ok'; info.textContent = 'Найдено треков: ' + r.count; }
+    else { info.className = 'folder-info bad'; info.textContent = 'Аудиофайлы не найдены (mp3, m4a, wav, flac, ogg, opus)'; }
+  } catch (e) { info.textContent = ''; }
+}
+$('#fFolder').addEventListener('change', checkFolder);
+$('#cancelBtn').onclick = () => dlg.close();
+$('#saveBtn').onclick = async () => {
+  const name = $('#fName').value.trim();
+  if (!name) { $('#fName').focus(); toast('Дайте потоку название'); return; }
+  const nk = renderKeyPreview();
+  if (!nk.ok) { $('#fName').focus(); toast(nk.error); return; }
+  const folder = $('#fFolder').value.trim();
+  if (!folder) { $('#fFolder').focus(); toast('Выберите папку с музыкой'); return; }
+  let count = 0;
+  try { count = (await (await fetch('/api/scan?path=' + encodeURIComponent(folder))).json()).count; } catch (e) { /* сеть */ }
+  if (!count) { checkFolder(); toast('В папке нет аудиофайлов — поток не сохранён'); return; }
+  const stream = {
+    id: editing || undefined, name, folder, color: pickColor,
+    fadeIn: +$('#fIn').value, fadeOut: +$('#fOut').value, crossfade: +$('#fXf').value,
+    shuffle: $('#fShuffle').checked, randomStart: $('#fRandStart').checked, loop: $('#fLoop').checked
+  };
+  send({ t: 'saveStream', stream });
+  dlg.close();
+};
+$('#delBtn').onclick = () => {
+  if (!editing) return;
+  const s = config.streams.find((x) => x.id === editing);
+  if (!confirm('Удалить поток «' + (s ? s.name : '') + '» и его правила в расписании? Файлы музыки не трогаются.')) return;
+  send({ t: 'deleteStream', id: editing });
+  dlg.close();
+};
+
+// ---------- выбор папки ----------
+let browsePath = '';
+async function loadDir(p) {
+  const r = await (await fetch('/api/browse?path=' + encodeURIComponent(p || ''))).json();
+  browsePath = r.path;
+  $('#bPath').value = r.path;
+  $('#bShort').innerHTML = r.shortcuts.map((s, i) => '<button type="button" class="chip" data-i="' + i + '">' + esc(s.name) + '</button>').join('');
+  $('#bShort').querySelectorAll('.chip').forEach((b) => { b.onclick = () => loadDir(r.shortcuts[+b.dataset.i].path); });
+  let html = '';
+  if (r.parent) html += '<div class="dir up" data-p="' + esc(r.parent) + '">' + ICON.up + ' Наверх</div>';
+  html += r.dirs.map((d) => '<div class="dir" data-p="' + esc(d.path) + '">' + ICON.folder + esc(d.name) + '</div>').join('');
+  if (!r.dirs.length && !r.error) html += '<div class="dir" style="cursor:default;color:var(--mu)">Подпапок нет</div>';
+  if (r.error) html += '<div class="dir" style="color:#FF8A8D">' + esc(r.error) + '</div>';
+  $('#bList').innerHTML = html;
+  $('#bList').scrollTop = 0;
+  $('#bList').querySelectorAll('.dir[data-p]').forEach((el) => { el.onclick = () => loadDir(el.dataset.p); });
+  $('#bInfo').className = 'folder-info' + (r.audio ? ' ok' : '');
+  $('#bInfo').textContent = r.audio ? 'В этой папке треков: ' + r.audio : 'В этой папке треков нет (подпапки тоже учитываются при выборе)';
+}
+function openWebBrowse() {
+  $('#editView').hidden = true; $('#browseView').hidden = false;
+  loadDir($('#fFolder').value.trim());
+}
+$('#browseBtn').onclick = () => {
+  if (!trayAvailable) { openWebBrowse(); return; }
+  $('#browseBtn').disabled = true;
+  $('#browseBtn').textContent = 'Окно выбора…';
+  send({ t: 'pickFolder', initial: $('#fFolder').value.trim() });
+};
+function setPicked(p) {
+  $('#fFolder').value = p;
+  if (!$('#fName').value.trim()) { $('#fName').value = p.split(/[\\/]/).filter(Boolean).pop().toUpperCase().slice(0, 30); renderKeyPreview(); }
+  checkFolder();
+}
+function onFolderPicked(m) {
+  $('#browseBtn').disabled = false;
+  $('#browseBtn').textContent = 'Выбрать…';
+  if (m.fallback) { openWebBrowse(); return; }
+  if (m.path) setPicked(m.path);
+}
+$('#bGo').onclick = () => loadDir($('#bPath').value.trim());
+$('#bPath').addEventListener('keydown', (e) => { if (e.key === 'Enter') loadDir($('#bPath').value.trim()); });
+$('#bCancel').onclick = () => { $('#editView').hidden = false; $('#browseView').hidden = true; };
+$('#bPick').onclick = () => {
+  $('#editView').hidden = false; $('#browseView').hidden = true;
+  setPicked(browsePath);
+};
+
+// ---------- кнопки шапки и справка ----------
+$('#stopAll').onclick = () => cmd('stopAll');
+const helpDlg = $('#helpDlg');
+$('#helpBtn').onclick = () => { helpDlg.showModal(); helpDlg.querySelector('.help').scrollTop = 0; };
+$('#helpClose').onclick = () => helpDlg.close();
+// при первом запуске (ещё нет потоков) сразу показываем справку
+let helpShown = false;
+function maybeFirstHelp() {
+  if (helpShown || config.streams.length) return;
+  let seen = false;
+  try { seen = localStorage.getItem('ppHelpSeen') === '1'; } catch (e) { /* нет хранилища */ }
+  if (seen) return;
+  helpShown = true;
+  try { localStorage.setItem('ppHelpSeen', '1'); } catch (e) { /* нет хранилища */ }
+  helpDlg.showModal();
+}
+setInterval(renderNextRun, 30000);
+
+connect();
+renderAll();
+</script>
+</body>
+</html>

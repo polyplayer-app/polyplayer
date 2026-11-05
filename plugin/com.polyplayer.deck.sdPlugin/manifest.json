@@ -1,0 +1,108 @@
+{
+  "Name": "PolyPlayer",
+  "Version": "3.0.0.0",
+  "Author": "PolyPlayer",
+  "Description": "Пульт для программы PolyPlayer: потоки, следующий трек, стоп всё, показать окно.",
+  "UUID": "com.polyplayer.deck",
+  "Icon": "imgs/plugin",
+  "Category": "PolyPlayer",
+  "CategoryIcon": "imgs/category",
+  "CodePath": "bin/plugin.js",
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.4"
+  },
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    }
+  ],
+  "Nodejs": {
+    "Version": "20"
+  },
+  "Actions": [
+    {
+      "UUID": "com.polyplayer.deck.stream",
+      "Name": "Поток",
+      "Icon": "imgs/action_stream",
+      "Tooltip": "Новая кнопка сама предлагает поток: 1 нажатие — дальше, 2 нажатия — ок. Потом: нажал — пуск/пауза, держи ~1 с — стоп, держи 3 с — сменить поток.",
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/key_stream",
+          "ShowTitle": false
+        }
+      ],
+      "Encoder": {
+        "layout": "$B1",
+        "Icon": "imgs/action_stream",
+        "TriggerDescription": {
+          "Rotate": "Громкость",
+          "Push": "Пуск / пауза (держать — стоп)",
+          "Touch": "Следующий трек"
+        }
+      }
+    },
+    {
+      "UUID": "com.polyplayer.deck.stopall",
+      "Name": "Стоп всё",
+      "Icon": "imgs/action_stop",
+      "Tooltip": "Плавно останавливает все потоки. Подсвечена, когда что-то играет.",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/key_stop",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.polyplayer.deck.next",
+      "Name": "Следующий трек",
+      "Icon": "imgs/action_next",
+      "Tooltip": "Следующий трек в играющем потоке. Активна, только когда играет ровно один поток.",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/key_next",
+          "ShowTitle": false
+        }
+      ]
+    },
+    {
+      "UUID": "com.polyplayer.deck.panel",
+      "Name": "PolyPlayer",
+      "Icon": "imgs/action_panel",
+      "Tooltip": "Серая — программа закрыта (нажми, чтобы открыть). Тёмная — в трее (нажми, чтобы показать). Коралловая — окно открыто (нажми, чтобы спрятать).",
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": false,
+      "UserTitleEnabled": false,
+      "States": [
+        {
+          "Image": "imgs/key_panel",
+          "ShowTitle": false
+        }
+      ]
+    }
+  ]
+}
