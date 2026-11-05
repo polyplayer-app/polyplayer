@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PolyPlayer — фоновая музыка по расписанию и с пульта Stream Deck</title>
-<meta name="description" content="Бесплатная программа для Windows: сколько угодно музыкальных потоков из своих папок, плавные переходы, расписание и управление с пульта Stream Deck. Работает без интернета.">
+<title>PolyPlayer — фоновая музыка одним нажатием или по расписанию</title>
+<meta name="description" content="Бесплатная программа для Windows: сколько угодно музыкальных потоков из своих папок, плавные переходы и управление кнопками, горячими клавишами, с пульта Stream Deck или по расписанию. Работает без интернета.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="PolyPlayer — фоновая музыка по кнопке и по расписанию">
-<meta property="og:description" content="Сколько угодно музыкальных потоков, плавные переходы, расписание и пульт Stream Deck. Бесплатно и без интернета.">
+<meta property="og:title" content="PolyPlayer — фоновая музыка одним нажатием или по расписанию">
+<meta property="og:description" content="Сколько угодно музыкальных потоков, плавные переходы, горячие клавиши, пульт Stream Deck и расписание. Бесплатно и без интернета.">
 <meta property="og:image" content="https://polyplayer-app.github.io/polyplayer/img/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -142,6 +142,7 @@ footer a:hover { color: var(--tx); }
 /* четыре возможности, два правила */
 .features.four { grid-template-columns: repeat(4, 1fr); }
 .trio.two { grid-template-columns: repeat(2, 1fr); max-width: 900px; }
+.sub.wide { max-width: 820px; margin-bottom: 0; }
 /* Stream Deck */
 .sd-intro { color: #C9CBD1; font-size: 16px; margin: 0 0 18px; }
 .sd-intro b { color: var(--tx); }
@@ -160,16 +161,16 @@ footer a:hover { color: var(--tx); }
 <nav>
   <div class="wrap">
     <a class="brand" href="#"><img src="icon.png" alt="">PolyPlayer</a>
-    <div class="links"><a href="#features">Возможности</a><a href="#streamdeck">Stream Deck</a><a href="#how">Как начать</a><a href="#faq">Вопросы</a></div>
+    <div class="links"><a href="#about">Как устроено</a><a href="#control">Управление</a><a href="#streamdeck">Stream Deck</a><a href="#faq">Вопросы</a></div>
     <a class="btn btn-acc" href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer-Setup.exe">Скачать</a>
   </div>
 </nav>
 
 <header class="hero">
   <div class="wrap">
-    <div class="badge"><i></i>Бесплатно · Работает без интернета · Windows 10 и 11</div>
-    <h1>Фоновая музыка <em>по кнопке и по расписанию</em></h1>
-    <p class="lead">Создайте сколько угодно музыкальных потоков из своих папок и включайте их одной кнопкой — в программе, с пульта Stream Deck или автоматически по расписанию. Разобраться сможет любой, даже без технического опыта.</p>
+    <div class="badge"><i></i>Для Windows 10 и 11 · Открытый исходный код</div>
+    <h1>Фоновая музыка <em>одним нажатием или по расписанию</em></h1>
+    <p class="lead">Выберите папки с музыкой, создайте из них потоки и дайте им названия. Управляйте потоками так, как удобно вам: кнопками в окне программы, горячими клавишами, с пульта Stream Deck или по расписанию. Всё необходимое — в простом и понятном интерфейсе. Бесплатно, без интернета, подписок и рекламы.</p>
     <div class="cta">
       <a class="btn btn-acc" href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer-Setup.exe">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>
@@ -189,29 +190,29 @@ footer a:hover { color: var(--tx); }
   </div>
 </header>
 
-<section>
+<section id="about">
   <div class="wrap">
-    <div class="kicker">Для чего</div>
-    <h2>Своя музыка для каждого момента</h2>
-    <p class="sub">Перед началом звучит одно, в перерыве — другое, в конце — третье. PolyPlayer переключает музыку плавно: без резких обрывов и неловкой тишины.</p>
-    <div class="problem">
-      <div class="pcard"><div class="t">По расписанию</div><b>Включается вовремя</b><p>Например, по будням в 9:40 начинает играть спокойная музыка, а к 9:58 она сама плавно затихает.</p></div>
-      <div class="pcard"><div class="t">По кнопке</div><b>Плавный старт и пауза</b><p>Нажали — музыка постепенно набирает громкость. Нажали ещё раз — мягко затихает и встаёт на паузу.</p></div>
-      <div class="pcard"><div class="t">Смена настроения</div><b>Один поток сменяет другой</b><p>Включили другой поток — тот, что играл, сам уступит ему место. Переход получается незаметным.</p></div>
+    <div class="kicker">Как устроено</div>
+    <h2>Каждый поток — отдельный плеер</h2>
+    <p class="sub">Поток воспроизводит музыку из своей папки со своей громкостью и настройками. Потоков может быть сколько угодно, а переключаться между ними можно в любой момент: музыка плавно затихает и нарастает, без обрывов и пауз.</p>
+    <div class="features">
+      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7c3-3 6 3 9 0s6 3 9 0M3 12c3-3 6 3 9 0s6 3 9 0M3 17c3-3 6 3 9 0s6 3 9 0"/></svg></div><b>Сколько угодно потоков</b><p>Каждому потоку назначаются своя папка с музыкой, громкость и цвет. Количество потоков не ограничено.</p></div>
+      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 18c5 0 5-12 10-12h6M4 6c5 0 5 12 10 12h6"/></svg></div><b>Плавное звучание</b><p>Музыка нарастает при включении и затихает при остановке, а треки перетекают друг в друга. Длительность переходов настраивается.</p></div>
+      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0M12 19h.01M3 3l18 18"/></svg></div><b>Без интернета</b><p>Музыка воспроизводится из папок на компьютере. Подписка, учётная запись и подключение к сети не нужны.</p></div>
     </div>
   </div>
 </section>
 
-<section id="features">
+<section id="control">
   <div class="wrap">
-    <div class="kicker">Возможности</div>
-    <h2>Разберётся любой</h2>
-    <p class="sub">Никаких сложных настроек: выбрали папку с музыкой, дали потоку название — и он готов к работе. Всё остальное программа берёт на себя.</p>
+    <div class="kicker">Управление</div>
+    <h2>Четыре способа управлять музыкой</h2>
+    <p class="sub">Пользуйтесь одним из них или сочетайте несколько. В окне программы всегда видно, какой поток играет сейчас.</p>
     <div class="features four">
-      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7c3-3 6 3 9 0s6 3 9 0M3 12c3-3 6 3 9 0s6 3 9 0M3 17c3-3 6 3 9 0s6 3 9 0"/></svg></div><b>Сколько угодно потоков</b><p>Каждый поток — отдельный плеер со своей папкой, громкостью и цветом.</p></div>
-      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 18c5 0 5-12 10-12h6M4 6c5 0 5 12 10 12h6"/></svg></div><b>Плавные переходы</b><p>Музыка нарастает и затихает постепенно, треки перетекают друг в друга.</p></div>
-      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></div><b>Расписание</b><p>Потоки включаются и выключаются сами — по дням недели и в нужное время.</p></div>
-      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0M12 19h.01M3 3l18 18"/></svg></div><b>Без интернета</b><p>Музыка играет прямо с компьютера: без подписок, рекламы и зависимости от сети.</p></div>
+      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5"/><path d="M10 9v4l3.5-2z"/><path d="M8 21h8"/></svg></div><b>Окно программы</b><p>У каждого потока своя карточка с кнопками запуска, паузы и остановки и регулятором громкости.</p></div>
+      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2.5"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></div><b>Горячие клавиши</b><p>Назначьте потокам сочетания клавиш и управляйте музыкой с клавиатуры, даже когда окно программы свёрнуто.</p></div>
+      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/></svg></div><b>Пульт Stream Deck</b><p>Каждый поток получает отдельную кнопку на пульте Elgato с названием, цветом и громкостью.</p></div>
+      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></div><b>Расписание</b><p>Потоки включаются и выключаются сами в заданные дни недели и время.</p></div>
     </div>
   </div>
 </section>
@@ -219,11 +220,8 @@ footer a:hover { color: var(--tx); }
 <section>
   <div class="wrap">
     <div class="kicker">Расписание</div>
-    <h2>Настроили один раз — и забыли</h2>
-    <div class="trio two">
-      <p><b>Правило «с — до».</b> Поток включится в назначенное время и сам плавно затихнет к концу.</p>
-      <p><b>Правило «Все потоки».</b> Выключает всю музыку, которая играет в этот момент. Удобно, когда к определённому часу должно стать тихо.</p>
-    </div>
+    <h2>Музыка включается сама</h2>
+    <p class="sub wide">Укажите поток, дни недели и время — он включится сам, а к концу заданного промежутка плавно затихнет. Правило «Все потоки» выключает любую музыку, которая играет в указанное время.</p>
     <div class="frame wide"><img src="img/app-schedule.png" alt="Расписание PolyPlayer: три правила на будни" width="1160" height="227"></div>
   </div>
 </section>
@@ -234,13 +232,8 @@ footer a:hover { color: var(--tx); }
       <div class="kicker">Интеграция со Stream Deck</div>
       <h2>Каждый поток — на своей кнопке</h2>
       <p class="sd-intro"><b>Stream Deck</b> — это пульт компании Elgato с кнопками-экранчиками. Его подключают к компьютеру по USB, а каждой кнопке назначают своё действие. Такими пультами пользуются стримеры, звукорежиссёры и ведущие, когда всё нужно делать быстро и без мыши.</p>
-      <ul>
-        <li>На кнопке видно название потока, его цвет и громкость. Пока поток играет, кнопка светится.</li>
-        <li>Нажатие включает поток или ставит на паузу, удержание — останавливает.</li>
-        <li>Есть отдельные кнопки «Стоп всё» и «Следующий трек».</li>
-        <li>Плагин для пульта устанавливается вместе с PolyPlayer, а если Stream Deck появился позже, — из настроек программы.</li>
-      </ul>
-      <p class="sd-note">Stream Deck не обязателен: всё то же самое можно делать в окне программы.</p>
+      <p class="sd-intro">PolyPlayer устанавливает на пульт свой плагин: каждый поток получает отдельную кнопку с названием, цветом и шкалой громкости. Пока поток играет, кнопка светится. Нажатие включает поток или ставит его на паузу, удержание — останавливает. Есть и отдельные кнопки «Стоп всё» и «Следующий трек».</p>
+      <p class="sd-note">Плагин устанавливается вместе с программой, а если пульт появился позже — из настроек PolyPlayer. Stream Deck не обязателен: всё то же самое можно делать в окне программы или горячими клавишами.</p>
     </div>
     <div class="sd-device" aria-label="Пульт с кнопками PolyPlayer">
       <div class="sd-body">
@@ -258,11 +251,11 @@ footer a:hover { color: var(--tx); }
   <div class="wrap">
     <div class="kicker">Как начать</div>
     <h2>Три шага до первой музыки</h2>
-    <p class="sub">Установка занимает минуту, права администратора не нужны.</p>
+    <p class="sub">Установка занимает около минуты.</p>
     <div class="steps">
-      <div class="step"><b>Установите</b><p>Скачайте PolyPlayer и запустите установщик.</p></div>
-      <div class="step"><b>Создайте потоки</b><p>Для каждого потока выберите папку с музыкой и дайте ему понятное название.</p></div>
-      <div class="step"><b>Включайте</b><p>Кнопкой в программе, с пульта Stream Deck или автоматически — по расписанию.</p></div>
+      <div class="step"><b>Установите</b><p>Скачайте PolyPlayer и запустите установщик. Права администратора не нужны.</p></div>
+      <div class="step"><b>Создайте потоки</b><p>Выберите для каждого потока папку с музыкой и дайте ему название.</p></div>
+      <div class="step"><b>Управляйте</b><p>Кнопками в окне программы, горячими клавишами, с пульта Stream Deck или по расписанию.</p></div>
     </div>
   </div>
 </section>
@@ -282,7 +275,7 @@ footer a:hover { color: var(--tx); }
     <div class="faq">
       <details><summary>Это действительно бесплатно?</summary><p>Да, полностью. PolyPlayer — программа с открытым исходным кодом (лицензия GPL v3), без рекламы и платных функций.</p></details>
       <details><summary>Нужен ли интернет?</summary><p>Нет. Музыка играет из папок на вашем компьютере. Интернет нужен только для того, чтобы программа узнала о выходе новой версии.</p></details>
-      <details><summary>Обязательно ли покупать Stream Deck?</summary><p>Нет. Всем можно управлять в окне программы, а регулярные включения доверить расписанию. Пульт пригодится, если удобнее нажимать отдельные кнопки, чем искать нужное на экране.</p></details>
+      <details><summary>Обязательно ли покупать Stream Deck?</summary><p>Нет. Всем можно управлять в окне программы или горячими клавишами, а регулярные включения доверить расписанию. Пульт удобен, если хочется управлять музыкой отдельными физическими кнопками.</p></details>
       <details><summary>Какие файлы поддерживаются?</summary><p>MP3, M4A, WAV, FLAC и OGG. Музыку из стриминговых сервисов PolyPlayer не воспроизводит.</p></details>
       <details><summary>При установке появилось окно «Windows защитил ваш компьютер». Это опасно?</summary><p>Нет. Так Windows реагирует на программы, у которых пока нет платной цифровой подписи разработчика. Нажмите «Подробнее», затем «Выполнить в любом случае». Исходный код PolyPlayer открыт, и его можно проверить на GitHub.</p></details>
       <details><summary>Как обновлять программу?</summary><p>Ничего делать не нужно: при запуске PolyPlayer сам сообщает о новой версии и устанавливает её за пару минут. Потоки и расписание сохраняются.</p></details>
@@ -311,7 +304,7 @@ fetch('https://api.github.com/repos/polyplayer-app/polyplayer/releases/latest').
   if (!rel || !rel.tag_name) return;
   const d = new Date(rel.published_at);
   const date = isNaN(d) ? '' : d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).replace(/\s*г\.?$/, '');
-  document.getElementById('meta').innerHTML = 'Версия ' + rel.tag_name.replace(/^v/, '') + (date ? ' от ' + date.replace(/ /g, ' ') : '') + ' · <a href="' + rel.html_url + '">что нового</a>';
+  document.getElementById('meta').innerHTML = 'Версия ' + rel.tag_name.replace(/^v/, '') + (date ? ' от ' + date.replace(/ /g, ' ') : '') + ' · <a href="' + rel.html_url + '">что нового</a>';
 }).catch(() => {});
 </script>
 </body>
