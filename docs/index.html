@@ -23,9 +23,10 @@ h1 { font-size: 40px; letter-spacing: -.02em; margin: 22px 0 8px; }
 .ver { color: var(--mu); font-size: 14px; margin-top: 14px; min-height: 22px; }
 .ver a { color: var(--mu); }
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 48px 0 32px; }
-.card { background: var(--s1); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; }
+.card { background: var(--s1); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; }
 .card b { display: block; margin-bottom: 4px; }
-.card span { color: var(--mu); font-size: 14px; }
+.card span { display: block; color: var(--mu); font-size: 14px; line-height: 1.5; text-wrap: balance; }
+.lead, .small, li { text-wrap: pretty; }
 h2 { font-size: 20px; margin: 32px 0 10px; }
 ol { padding-left: 22px; color: #D5D7DB; } li { margin: 6px 0; }
 .small { color: var(--mu); font-size: 14px; }
@@ -48,9 +49,9 @@ footer a { color: var(--mu); }
   </section>
 
   <div class="cards">
-    <div class="card"><b>Несколько потоков</b><span>Папки с музыкой, плавное включение, затухание и переходы между треками.</span></div>
-    <div class="card"><b>Расписание</b><span>Включить и выключить музыку в нужное время по дням недели.</span></div>
-    <div class="card"><b>Пульт Stream Deck</b><span>Каждый поток — на своей кнопке. Плагин ставится вместе с программой.</span></div>
+    <div class="card"><b>Несколько потоков</b><span>Своя папка с музыкой у каждого потока, плавные переходы.</span></div>
+    <div class="card"><b>Расписание</b><span>Музыка включается и выключается сама в нужное время.</span></div>
+    <div class="card"><b>Пульт Stream Deck</b><span>Каждый поток на своей кнопке, плагин ставится сам.</span></div>
   </div>
 
   <h2>Установка</h2>
