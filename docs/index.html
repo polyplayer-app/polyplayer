@@ -39,27 +39,27 @@ footer a { color: var(--mu); }
   <section class="hero">
     <img src="icon.png" alt="">
     <h1>PolyPlayer</h1>
-    <p class="lead">Фоновая музыка в несколько потоков для Windows — с расписанием и управлением с пульта Stream Deck.</p>
+    <p class="lead">Фоновая музыка в несколько потоков для Windows. Расписание и управление с пульта Stream Deck.</p>
     <a class="dl" id="dl" href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer-Setup.exe">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>
       Скачать PolyPlayer
     </a>
-    <div class="ver" id="ver">Для Windows 10 и 11</div>
+    <div class="ver" id="ver">Для Windows 10 и 11</div>
   </section>
 
   <div class="cards">
-    <div class="card"><b>Несколько потоков</b><span>Папки с музыкой, плавное включение, затухание и переходы между треками.</span></div>
-    <div class="card"><b>Расписание</b><span>Включить и выключить музыку в нужное время по дням недели.</span></div>
-    <div class="card"><b>Пульт Stream Deck</b><span>Каждый поток — на своей кнопке. Плагин ставится вместе с программой.</span></div>
+    <div class="card"><b>Несколько потоков</b><span>Папки с музыкой, плавное включение, затухание и переходы между треками.</span></div>
+    <div class="card"><b>Расписание</b><span>Включить и выключить музыку в нужное время по дням недели.</span></div>
+    <div class="card"><b>Пульт Stream Deck</b><span>Каждый поток — на своей кнопке. Плагин ставится вместе с программой.</span></div>
   </div>
 
   <h2>Установка</h2>
   <ol>
-    <li>Нажмите «Скачать PolyPlayer» и запустите скачанный файл.</li>
-    <li>Если Windows покажет «Windows защитил ваш компьютер», нажмите «Подробнее» → «Выполнить в любом случае».</li>
-    <li>Если на компьютере есть программа Stream Deck, после первого запуска PolyPlayer предложит установить плагин для пульта.</li>
+    <li>Нажмите «Скачать PolyPlayer» и запустите скачанный файл.</li>
+    <li>Если Windows покажет «Windows защитил ваш компьютер», нажмите «Подробнее» → «Выполнить в любом случае».</li>
+    <li>Если на компьютере установлен Stream Deck, после первого запуска PolyPlayer предложит установить плагин для пульта.</li>
   </ol>
-  <p class="small">Дальше PolyPlayer обновляется сам: при запуске он сообщает о новой версии и предлагает её установить. Отдельно плагин для Stream Deck: <a id="plg" href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer.streamDeckPlugin">PolyPlayer.streamDeckPlugin</a>.</p>
+  <p class="small">Дальше PolyPlayer обновляется сам: при запуске он сообщает о новой версии и предлагает её установить. Плагин для Stream Deck можно скачать и отдельно: <a id="plg" href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer.streamDeckPlugin">PolyPlayer.streamDeckPlugin</a>.</p>
 
   <footer>Открытый исходный код · <a href="https://github.com/polyplayer-app/polyplayer">GitHub</a> · лицензия GPL v3</footer>
 </main>
@@ -69,7 +69,7 @@ fetch('https://api.github.com/repos/polyplayer-app/polyplayer/releases/latest').
   if (!rel || !rel.tag_name) return;
   const d = new Date(rel.published_at);
   const date = isNaN(d) ? '' : d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).replace(/\s*г\.?$/, '');
-  document.getElementById('ver').innerHTML = 'Версия ' + rel.tag_name.replace(/^v/, '') + (date ? ' от ' + date : '') + ' · Windows 10 и 11 · <a href="' + rel.html_url + '">что нового</a>';
+  document.getElementById('ver').innerHTML = 'Версия\u00a0' + rel.tag_name.replace(/^v/, '') + (date ? ' от\u00a0' + date.replace(/ /g, '\u00a0') : '') + ' · Windows\u00a010 и\u00a011 · <a href="' + rel.html_url + '">что нового</a>';
 }).catch(() => {});
 </script>
 </body>
