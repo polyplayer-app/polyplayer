@@ -1,10 +1,12 @@
 # Сборка PolyPlayer для Windows и публикация выпуска на GitHub.
-# Запускается, когда в репозиторий отправлен тег вида v3.0.1 (версия должна совпадать с package.json).
+# Запускается при каждом изменении в main: если выпуска с версией из package.json ещё нет —
+# собирает установщик и плагин и публикует выпуск vX.Y.Z (тег создаётся автоматически).
+# Новая версия = поднять "version" в package.json, обновить RELEASE_NOTES.md и отправить в main.
 name: Release
 
 on:
   push:
-    tags: ['v*']
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -16,29 +18,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Версия и проверка, нужен ли выпуск
+        id: ver
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $v = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          "version=$v" >> $env:GITHUB_OUTPUT
+          gh release view "v$v" --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) { "skip=true" >> $env:GITHUB_OUTPUT; Write-Host "Выпуск v$v уже есть — собирать нечего" }
+          else { "skip=false" >> $env:GITHUB_OUTPUT }
+          exit 0
+
       - uses: actions/setup-node@v4
+        if: steps.ver.outputs.skip != 'true'
         with:
           node-version: 22
           cache: npm
 
-      - name: Версия
-        id: ver
-        shell: pwsh
-        run: |
-          $v = (Get-Content package.json -Raw | ConvertFrom-Json).version
-          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$v") { throw "Тег $env:GITHUB_REF_NAME не совпадает с версией в package.json ($v)" }
-          "version=$v" >> $env:GITHUB_OUTPUT
-
       - name: Зависимости
+        if: steps.ver.outputs.skip != 'true'
         run: npm ci
 
       - name: Сборка программы
+        if: steps.ver.outputs.skip != 'true'
         run: npx electron-builder --config builder.json --win --x64 --dir
 
       - name: Значок и версия в PolyPlayer.exe
+        if: steps.ver.outputs.skip != 'true'
         run: node patch-exe.js "dist/win-unpacked/PolyPlayer.exe" build/icon.ico ${{ steps.ver.outputs.version }}
 
       - name: Установщик (NSIS)
+        if: steps.ver.outputs.skip != 'true'
         shell: pwsh
         run: |
           if (-not (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { choco install nsis -y --no-progress }
@@ -46,6 +58,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "makensis failed" }
 
       - name: Плагин Stream Deck
+        if: steps.ver.outputs.skip != 'true'
         shell: pwsh
         run: |
           Copy-Item app/public/keyname.js plugin/com.polyplayer.deck.sdPlugin/bin/keyname.js -Force
@@ -54,6 +67,7 @@ jobs:
           Pop-Location
 
       - name: Выпуск на GitHub
+        if: steps.ver.outputs.skip != 'true'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -61,6 +75,5 @@ jobs:
           $v = '${{ steps.ver.outputs.version }}'
           $tag = "v$v"
           $files = @("dist/PolyPlayer-Setup-$v.exe", "dist/PolyPlayer.streamDeckPlugin")
-          gh release view $tag *> $null
-          if ($LASTEXITCODE -eq 0) { gh release upload $tag @files --clobber }
-          else { gh release create $tag @files --title "PolyPlayer $v" --notes-file RELEASE_NOTES.md --verify-tag }
+          gh release create $tag @files --title "PolyPlayer $v" --notes-file RELEASE_NOTES.md --target $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) { throw "gh release create failed" }

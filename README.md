@@ -24,7 +24,7 @@
 - `plugin/com.polyplayer.deck.sdPlugin` — плагин Stream Deck, подключается к программе как пульт.
 - `installer.nsi` — установщик (NSIS).
 
-Выпуск собирается автоматически (GitHub Actions, `.github/workflows/release.yml`), когда в репозиторий отправлен тег `vX.Y.Z`, совпадающий с версией в `package.json`.
+Выпуск собирается автоматически (GitHub Actions, `.github/workflows/release.yml`): когда в `main` попадает новая версия в `package.json`, GitHub собирает установщик и плагин и публикует выпуск `vX.Y.Z`.
 
 ## Лицензия
 
