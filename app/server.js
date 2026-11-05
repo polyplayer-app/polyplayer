@@ -624,6 +624,9 @@ function createApp(opts) {
       case 'showWindow':
         app.showWindow();
         break;
+      case 'installPlugin': // «Установить плагин Stream Deck» — обрабатывает main.js
+        app.emit('installPlugin');
+        break;
       case 'updateCmd': // «Проверить обновления» / «Установить» — обрабатывает main.js
         app.emit('updateCmd', String(msg.cmd || ''));
         break;

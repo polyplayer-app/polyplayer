@@ -27,9 +27,10 @@ const A = {
   next: 'com.polyplayer.deck.next',
   panel: 'com.polyplayer.deck.panel'
 };
-const HOLD_MS = 600;          // держать дольше — стоп
-const CHOOSE_HOLD_MS = 3000;  // держать 3 с — сменить поток на кнопке
-const DOUBLE_MS = 400;        // два нажатия быстрее — «сохранить»
+const HOLD_MS = 1000;         // держать 1 с и отпустить — стоп
+const CHOOSE_HOLD_MS = 3000;  // держать 3 с и отпустить — сменить поток на кнопке
+const SELECT_HOLD_MS = 1000;  // в режиме выбора: держать 1 с — выбрать показанный поток
+const HOLD_SHOW_MS = 250;     // через сколько начинаем показывать, что кнопку держат
 const VOL_STEP = 2;
 
 // ---------- аргументы ----------
@@ -204,7 +205,7 @@ function simpleKeySvg(lines, sub, color, active) {
   return svgUri(svg);
 }
 
-// кнопка в режиме выбора потока: 1 нажатие — следующий, 2 быстрых — сохранить
+// кнопка в режиме выбора потока: нажать — следующий, держать 1 с — выбрать
 function chooseKeySvg(p, i, n) {
   let svg = '<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144">';
   svg += '<rect width="144" height="144" fill="#262626"/>';
@@ -220,12 +221,64 @@ function chooseHintSvg(p, i, n) {
   let svg = '<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144">';
   svg += '<rect width="144" height="144" fill="#262626"/>';
   svg += '<rect x="5" y="5" width="134" height="134" rx="14" fill="none" stroke="' + p.color + '" stroke-width="5" stroke-dasharray="14 9"/>';
-  svg += textBlock(['1 НАЖАТИЕ'], 72, 16, 44, 122, 20, p.color);
+  svg += textBlock(['НАЖАТЬ'], 72, 16, 44, 122, 20, p.color);
   svg += textBlock(['ДАЛЬШЕ'], 72, 42, 68, 120, 20, '#F2E6CC');
-  svg += textBlock(['2 НАЖАТИЯ'], 72, 76, 104, 122, 20, p.color);
-  svg += textBlock(['ОК'], 72, 102, 128, 120, 22, '#F2E6CC');
+  svg += textBlock(['ДЕРЖАТЬ'], 72, 76, 104, 122, 20, p.color);
+  svg += textBlock(['ВЫБРАТЬ'], 72, 102, 128, 120, 20, '#F2E6CC');
   svg += '</svg>';
   return svgUri(svg);
+}
+
+// пока кнопку держат — на ней видно, что произойдёт, если отпустить, и полоска до следующего шага
+function holdSvg(kind, frac, color, label) {
+  const f = Math.max(0, Math.min(1, frac || 0));
+  let svg = '<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144">';
+  svg += '<rect width="144" height="144" fill="#262626"/>';
+  svg += '<rect width="144" height="10" fill="' + color + '"/>';
+  const bar = (y) => '<rect x="14" y="' + y + '" width="116" height="12" rx="6" fill="#000" fill-opacity="0.5"/>' +
+    (f > 0 ? '<rect x="14" y="' + y + '" width="' + Math.max(12, 116 * f).toFixed(1) + '" height="12" rx="6" fill="' + color + '"/>' : '');
+  if (kind === 'stop') { // 0,25–1 с: держат — скоро «стоп»
+    svg += textBlock(['СТОП'], 72, 30, 70, 124, 30, '#8E8E8E');
+    svg += textBlock(['ДЕРЖИТЕ'], 72, 74, 98, 124, 16, '#8E8E8E') + bar(110);
+  } else if (kind === 'stop-ready') { // 1–3 с: отпустить — стоп; держать дальше — выбор потока
+    svg += '<rect x="58" y="22" width="28" height="28" rx="5" fill="' + color + '"/>';
+    svg += textBlock(['ОТПУСТИТЕ —', 'СТОП'], 72, 54, 96, 128, 17, '#F2E6CC') + bar(110);
+  } else if (kind === 'choose-ready') { // ≥ 3 с: отпустить — выбор потока
+    svg += textBlock(['ОТПУСТИТЕ —', 'ВЫБОР', 'ПОТОКА'], 72, 26, 128, 128, 20, '#F2E6CC');
+  } else if (kind === 'select') { // режим выбора: держат — сейчас выберется показанный поток
+    svg += textBlock([label || ''], 72, 22, 58, 124, 20, '#F2E6CC');
+    svg += textBlock(['ВЫБРАТЬ…'], 72, 66, 96, 124, 18, color) + bar(110);
+  }
+  svg += '</svg>';
+  return svgUri(svg);
+}
+
+function stopHold(c) { clearInterval(c.holdTimer); c.holdTimer = null; }
+function startHold(c, context) {
+  stopHold(c);
+  c.holdDone = false;
+  c.holdTimer = setInterval(() => {
+    if (!c.downAt) { stopHold(c); return; }
+    const t = Date.now() - c.downAt;
+    if (t < HOLD_SHOW_MS) return;
+    const snap = app.snapshot();
+    let img;
+    if (isChoosing(c)) {
+      const list = snap.config.streams;
+      if (!list.length) return;
+      const p = list[((c.previewIdx || 0) % list.length + list.length) % list.length];
+      if (t >= SELECT_HOLD_MS) { stopHold(c); c.holdDone = true; commitChoice(c, context); return; } // выбрали — не дожидаясь отпускания
+      img = holdSvg('select', (t - HOLD_SHOW_MS) / (SELECT_HOLD_MS - HOLD_SHOW_MS), p.color, p.name.toUpperCase());
+    } else {
+      const { s } = findStream(c.settings.streamId);
+      if (!s) return;
+      if (t < HOLD_MS) img = holdSvg('stop', (t - HOLD_SHOW_MS) / (HOLD_MS - HOLD_SHOW_MS), '#8E8E8E');
+      else if (t < CHOOSE_HOLD_MS) img = holdSvg('stop-ready', (t - HOLD_MS) / (CHOOSE_HOLD_MS - HOLD_MS), s.color);
+      else img = holdSvg('choose-ready', 1, s.color);
+    }
+    c.last = {};
+    send({ event: 'setImage', context, payload: { image: img, target: 0 } });
+  }, 80);
 }
 
 // в режиме выбора кнопка каждые 1,6 с переключается: название потока ↔ подсказка
@@ -271,19 +324,10 @@ function choosePress(c, context) {
   c.lastPressAt = Date.now(); // пока листают — подсказку не показываем, только названия
   const list = app.snapshot().config.streams;
   if (!list.length) { app.showWindow(); send({ event: 'showAlert', context }); return; }
-  if (c.pressTimer) { // второе быстрое нажатие — сохраняем показанный поток
-    clearTimeout(c.pressTimer);
-    c.pressTimer = null;
-    commitChoice(c, context);
-    return;
-  }
-  c.pressTimer = setTimeout(() => {
-    c.pressTimer = null;
-    c.previewIdx = ((c.previewIdx || 0) + 1) % list.length;
-    clearTimeout(c.chooseTimeout);
-    if (c.choosing) c.chooseTimeout = setTimeout(() => { if (c.choosing) { c.choosing = false; render(context); } }, 30000);
-    render(context);
-  }, DOUBLE_MS);
+  c.previewIdx = ((c.previewIdx || 0) + 1) % list.length;
+  clearTimeout(c.chooseTimeout);
+  if (c.choosing) c.chooseTimeout = setTimeout(() => { if (c.choosing) { c.choosing = false; render(context); } }, 30000);
+  render(context);
 }
 
 // «Следующий трек» работает, только когда играет ровно один поток
@@ -433,7 +477,9 @@ function onMessage(msg) {
     }
     case 'keyDown': {
       const c = ctxs.get(context);
-      if (c) c.downAt = Date.now();
+      if (!c) break;
+      c.downAt = Date.now();
+      if (c.action === A.stream && c.controller !== 'Encoder') startHold(c, context);
       break;
     }
     case 'keyUp': {
@@ -441,9 +487,12 @@ function onMessage(msg) {
       if (!c) break;
       const held = c.downAt ? Date.now() - c.downAt : 0;
       c.downAt = 0;
+      stopHold(c);
       c.last = {}; // Stream Deck иногда перерисовывает кнопку сам — вернём наш рисунок
-      if (c.action === A.stream && isChoosing(c)) {
-        choosePress(c, context);
+      if (c.holdDone) { // поток уже выбран удержанием
+        c.holdDone = false;
+      } else if (c.action === A.stream && isChoosing(c)) {
+        if (held >= SELECT_HOLD_MS) commitChoice(c, context); else choosePress(c, context);
       } else if (c.action === A.stream) {
         const { s } = findStream(c.settings.streamId);
         if (held >= CHOOSE_HOLD_MS) startChoosing(c, context);

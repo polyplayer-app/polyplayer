@@ -262,10 +262,16 @@ function installUpdate() {
 // ---------- плагин Stream Deck: ставим или обновляем вместе с программой ----------
 // Плагин лежит внутри программы. Если на компьютере есть Stream Deck, а плагин не стоит или он старее программы,
 // программа один раз (для каждой версии) открывает файл плагина — Stream Deck ставит его поверх старого.
+const BUNDLED_PLUGIN = path.join(process.resourcesPath || __dirname, 'PolyPlayer.streamDeckPlugin');
+function openBundledPlugin() {
+  if (!fs.existsSync(BUNDLED_PLUGIN)) return;
+  core.log('Opening bundled Stream Deck plugin');
+  shell.openPath(BUNDLED_PLUGIN).then((err) => { if (err) core.log('Plugin open error: ' + err); });
+}
 function offerStreamDeckPlugin() {
   try {
     if (!app.isPackaged || process.platform !== 'win32') return;
-    const bundled = path.join(process.resourcesPath, 'PolyPlayer.streamDeckPlugin');
+    const bundled = BUNDLED_PLUGIN;
     const sdRoot = path.join(app.getPath('appData'), 'Elgato', 'StreamDeck');
     if (!fs.existsSync(bundled) || !fs.existsSync(sdRoot)) return; // Stream Deck не установлен
     let installed = '';
@@ -305,7 +311,7 @@ app.whenReady().then(async () => {
     dataDir: process.env.POLYPLAYER_DATA_DIR || undefined, // для тестов
     port: process.env.POLYPLAYER_PORT ? parseInt(process.env.POLYPLAYER_PORT, 10) : undefined,
     trayProvider,
-    about: { version: app.getVersion(), date: (() => { try { return require('./package.json').releaseDate || ''; } catch (e) { return ''; } })() },
+    about: { version: app.getVersion(), date: (() => { try { return require('./package.json').releaseDate || ''; } catch (e) { return ''; } })(), plugin: fs.existsSync(BUNDLED_PLUGIN) },
     autoOpen: false, // окно создаём сами
     launchHook: (hidden) => {
       if (!win || win.isDestroyed()) createWindow(!hidden);
@@ -333,6 +339,7 @@ app.whenReady().then(async () => {
     if (kind === 'config') applyAutostart();
     if (kind === 'runtime' && isPlaying() !== trayPlaying) updateTrayMenu(); // «Стоп всё» в меню — только когда что-то играет
   });
+  core.on('installPlugin', openBundledPlugin);
   core.on('updateCmd', (cmd) => {
     if (cmd === 'install') installUpdate();
     else if (cmd === 'download') downloadUpdate();
