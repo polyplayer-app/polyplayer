@@ -3,74 +3,299 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PolyPlayer</title>
-<meta name="description" content="PolyPlayer — фоновая музыка в несколько потоков для Windows: расписание и пульт Stream Deck.">
+<title>PolyPlayer — фоновая музыка по расписанию и с пульта Stream Deck</title>
+<meta name="description" content="PolyPlayer ведёт фоновую музыку на мероприятиях: несколько плейлистов, плавные переходы, расписание и управление с пульта Elgato Stream Deck. Бесплатно, для Windows.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="PolyPlayer — фоновая музыка, которая управляется сама">
+<meta property="og:description" content="Несколько плейлистов, плавные переходы, расписание и пульт Stream Deck. Бесплатно, для Windows.">
+<meta property="og:image" content="https://polyplayer-app.github.io/polyplayer/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="favicon.png">
 <style>
 @font-face { font-family: Inter; src: url(Inter-cyrillic.woff2) format('woff2'); font-weight: 100 900; unicode-range: U+0400-04FF; }
 @font-face { font-family: Inter; src: url(Inter-latin.woff2) format('woff2'); font-weight: 100 900; }
-:root { --bg: #16171B; --s1: #1E2026; --line: rgba(255,255,255,.08); --tx: #ECEDEF; --mu: #9A9DA6; --acc: #FF6A4D; --grad: linear-gradient(135deg, #FF9A5C, #F0484E); }
+:root {
+  --bg: #121317; --s1: #1A1C21; --s2: #20232A; --line: rgba(255,255,255,.08); --line2: rgba(255,255,255,.14);
+  --tx: #EEEFF1; --mu: #9A9DA6; --mu2: #6E717A;
+  --acc: #FF6A4D; --acc2: #F0484E; --grad: linear-gradient(135deg, #FF9A5C, #F0484E);
+}
 * { box-sizing: border-box; }
-body { margin: 0; background: radial-gradient(900px 420px at 50% -10%, rgba(255,106,77,.16), transparent 60%), var(--bg); color: var(--tx); font: 16px/1.55 Inter, "Segoe UI", system-ui, sans-serif; min-height: 100vh; }
-main { max-width: 720px; margin: 0 auto; padding: 64px 16px 48px; }
-.hero { text-align: center; }
-.hero img { width: 112px; height: 112px; border-radius: 26px; box-shadow: 0 24px 60px -24px rgba(255,106,77,.55); }
-h1 { font-size: 40px; letter-spacing: -.02em; margin: 22px 0 8px; }
-.lead { color: var(--mu); font-size: 18px; margin: 0 auto 30px; max-width: 520px; }
-.dl { display: inline-flex; align-items: center; gap: 10px; background: var(--grad); color: #fff; text-decoration: none; font-weight: 700; font-size: 18px; padding: 16px 30px; border-radius: 14px; box-shadow: 0 14px 34px -14px var(--acc); }
-.dl:hover { filter: brightness(1.06); }
-.dl svg { width: 20px; height: 20px; }
-.ver { color: var(--mu); font-size: 14px; margin-top: 14px; min-height: 22px; }
-.ver a { color: var(--mu); }
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 48px 0 32px; }
-.card { background: var(--s1); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; }
-.card b { display: block; margin-bottom: 4px; }
-.card span { display: block; color: var(--mu); font-size: 14px; line-height: 1.5; text-wrap: balance; }
-.lead, .small, li { text-wrap: pretty; }
-h2 { font-size: 20px; margin: 32px 0 10px; }
-ol { padding-left: 22px; color: #D5D7DB; } li { margin: 6px 0; }
-.small { color: var(--mu); font-size: 14px; }
-.small a, ol a { color: var(--tx); }
-footer { text-align: center; color: var(--mu); font-size: 13px; margin-top: 48px; }
-footer a { color: var(--mu); }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--tx); font: 16px/1.6 Inter, "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+p, li, h1, h2, h3 { text-wrap: pretty; }
+h1, h2 { text-wrap: balance; }
+
+/* навигация */
+nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px); background: rgba(18,19,23,.72); border-bottom: 1px solid var(--line); }
+nav .wrap { display: flex; align-items: center; gap: 28px; height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; text-decoration: none; font-size: 17px; }
+.brand img { width: 30px; height: 30px; border-radius: 8px; }
+nav .links { display: flex; gap: 22px; margin-left: auto; font-size: 14.5px; }
+nav .links a { color: var(--mu); text-decoration: none; }
+nav .links a:hover { color: var(--tx); }
+.btn { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 650; border-radius: 12px; white-space: nowrap; }
+.btn-acc { background: var(--grad); color: #fff; box-shadow: 0 14px 34px -14px var(--acc); }
+.btn-acc:hover { filter: brightness(1.07); }
+.btn-ghost { border: 1px solid var(--line2); color: var(--tx); }
+.btn-ghost:hover { background: rgba(255,255,255,.04); }
+nav .btn { padding: 9px 16px; font-size: 14px; }
+.btn svg { width: 18px; height: 18px; flex: none; }
+
+/* первый экран */
+.hero { position: relative; padding: 84px 0 0; text-align: center; overflow: hidden; }
+.hero::before { content: ""; position: absolute; inset: -120px 0 auto; height: 560px; background: radial-gradient(640px 320px at 50% 30%, rgba(255,106,77,.20), transparent 70%); pointer-events: none; }
+.badge { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--mu); border: 1px solid var(--line2); border-radius: 999px; padding: 6px 14px; margin-bottom: 26px; position: relative; }
+.badge i { width: 7px; height: 7px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 10px var(--acc); }
+h1 { font-size: clamp(36px, 5.6vw, 60px); line-height: 1.08; letter-spacing: -.03em; margin: 0 auto 20px; max-width: 820px; position: relative; }
+h1 em { font-style: normal; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero .lead { font-size: clamp(17px, 2vw, 20px); color: var(--mu); max-width: 660px; margin: 0 auto 34px; position: relative; }
+.cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; }
+.cta .btn { padding: 15px 26px; font-size: 17px; }
+.meta { color: var(--mu2); font-size: 13.5px; margin-top: 16px; min-height: 22px; position: relative; }
+.meta a { color: var(--mu); }
+.shot-hero { position: relative; margin: 56px auto 0; max-width: 1000px; }
+.window { border-radius: 16px; border: 1px solid var(--line2); overflow: hidden; background: #0C0D10; box-shadow: 0 40px 120px -40px rgba(0,0,0,.9), 0 0 0 1px rgba(0,0,0,.4); }
+.window .bar { height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 0 0 12px; background: #17181C; border-bottom: 1px solid var(--line); }
+.window .bar img { width: 16px; height: 16px; border-radius: 4px; }
+.window .bar b { font-size: 12.5px; font-weight: 500; color: var(--mu); margin-right: auto; }
+.window .bar i { width: 46px; height: 34px; display: grid; place-items: center; color: var(--mu2); font-style: normal; font-size: 13px; }
+.window img { display: block; width: 100%; height: auto; }
+.deck { position: absolute; right: -28px; bottom: -36px; display: grid; grid-template-columns: repeat(3, 62px); gap: 8px; padding: 12px; background: #0B0B0D; border: 1px solid var(--line2); border-radius: 18px; box-shadow: 0 30px 70px -20px rgba(0,0,0,.95); }
+.deck img { width: 62px; height: 62px; border-radius: 10px; display: block; }
+.fade-bottom { height: 90px; }
+
+/* секции */
+section { padding: 96px 0 0; }
+.kicker { color: var(--acc); font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 12px; }
+h2 { font-size: clamp(28px, 3.6vw, 40px); line-height: 1.15; letter-spacing: -.02em; margin: 0 0 14px; }
+.sub { color: var(--mu); font-size: 18px; max-width: 640px; margin: 0 0 40px; }
+
+.problem { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.pcard { background: var(--s1); border: 1px solid var(--line); border-radius: 18px; padding: 24px; }
+.pcard .t { font-size: 13px; color: var(--mu2); font-weight: 600; margin-bottom: 8px; }
+.pcard b { display: block; font-size: 18px; margin-bottom: 6px; }
+.pcard p { margin: 0; color: var(--mu); font-size: 15px; }
+
+.features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.f { background: var(--s1); border: 1px solid var(--line); border-radius: 18px; padding: 24px; }
+.f .ic { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,106,77,.12); color: var(--acc); margin-bottom: 16px; }
+.f .ic svg { width: 22px; height: 22px; }
+.f b { display: block; font-size: 17px; margin-bottom: 6px; }
+.f p { margin: 0; color: var(--mu); font-size: 15px; }
+
+.split { display: grid; grid-template-columns: 1fr 1.25fr; gap: 48px; align-items: center; }
+.split.rev { grid-template-columns: 1.25fr 1fr; }
+.split ul { list-style: none; padding: 0; margin: 0; }
+.split li { position: relative; padding-left: 28px; margin: 12px 0; color: #D5D7DB; }
+.split li::before { content: ""; position: absolute; left: 0; top: 9px; width: 14px; height: 8px; border-left: 2px solid var(--acc); border-bottom: 2px solid var(--acc); transform: rotate(-45deg); }
+.frame { border-radius: 14px; border: 1px solid var(--line2); overflow: hidden; box-shadow: 0 30px 80px -40px rgba(0,0,0,.9); }
+.frame img { display: block; width: 100%; height: auto; }
+.frame.wide { margin-top: 28px; }
+.trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 8px; }
+.trio p { margin: 0; color: #C9CBD1; font-size: 15px; }
+.trio b { color: var(--tx); }
+@media (max-width: 760px) { .trio { grid-template-columns: 1fr; gap: 12px; } }
+.keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; max-width: 420px; margin-left: auto; }
+.keys figure { margin: 0; text-align: center; }
+.keys img { width: 100%; max-width: 112px; aspect-ratio: 1; border-radius: 16px; box-shadow: 0 16px 36px -16px #000; display: block; margin: 0 auto 8px; }
+.keys figcaption { font-size: 13px; color: var(--mu); line-height: 1.35; }
+
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; counter-reset: s; }
+.step { background: var(--s1); border: 1px solid var(--line); border-radius: 18px; padding: 24px; }
+.step::before { counter-increment: s; content: counter(s); display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--grad); color: #fff; font-weight: 700; font-size: 15px; margin-bottom: 14px; }
+.step b { display: block; font-size: 17px; margin-bottom: 6px; }
+.step p { margin: 0; color: var(--mu); font-size: 15px; }
+
+.who { display: flex; flex-wrap: wrap; gap: 10px; }
+.who span { border: 1px solid var(--line2); border-radius: 999px; padding: 9px 16px; font-size: 15px; color: #D5D7DB; background: var(--s1); }
+
+.faq { max-width: 820px; }
+.faq details { border-bottom: 1px solid var(--line); padding: 18px 0; }
+.faq summary { cursor: pointer; font-weight: 600; font-size: 17px; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--mu); font-weight: 400; font-size: 22px; line-height: 1; }
+.faq details[open] summary::after { content: "–"; }
+.faq p { color: var(--mu); margin: 10px 0 0; }
+
+.final { margin: 110px 0 0; text-align: center; background: radial-gradient(520px 240px at 50% 0%, rgba(255,106,77,.18), transparent 70%), var(--s1); border: 1px solid var(--line); border-radius: 24px; padding: 56px 24px; }
+.final h2 { margin-bottom: 10px; }
+.final p { color: var(--mu); margin: 0 0 28px; }
+.final .btn { padding: 15px 26px; font-size: 17px; }
+
+footer { color: var(--mu2); font-size: 13.5px; padding: 44px 0 56px; display: flex; gap: 18px; flex-wrap: wrap; justify-content: space-between; }
+footer a { color: var(--mu); text-decoration: none; }
+footer a:hover { color: var(--tx); }
+
+@media (max-width: 900px) {
+  nav .links { display: none; }
+  nav .btn { margin-left: auto; }
+  .problem, .features, .steps { grid-template-columns: 1fr; }
+  .split, .split.rev { grid-template-columns: 1fr; gap: 28px; }
+  .split.rev .frame { order: 2; }
+  .keys { margin: 0 auto; }
+  .deck { position: static; margin: 16px auto 0; width: max-content; }
+  section { padding-top: 72px; }
+}
 </style>
 </head>
 <body>
-<main>
-  <section class="hero">
-    <img src="icon.png" alt="">
-    <h1>PolyPlayer</h1>
-    <p class="lead">Фоновая музыка в несколько потоков для Windows. Расписание и управление с пульта Stream Deck.</p>
-    <a class="dl" id="dl" href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer-Setup.exe">
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#"><img src="icon.png" alt="">PolyPlayer</a>
+    <div class="links"><a href="#features">Возможности</a><a href="#streamdeck">Stream Deck</a><a href="#how">Как начать</a><a href="#faq">Вопросы</a></div>
+    <a class="btn btn-acc" href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer-Setup.exe">Скачать</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="badge"><i></i>Бесплатно · Windows 10 и 11 · открытый код</div>
+    <h1>Фоновая музыка, которая <em>управляется сама</em></h1>
+    <p class="lead">Несколько плейлистов, плавные переходы и расписание. PolyPlayer сам включает нужную музыку вовремя, а вмешаться можно одной кнопкой на пульте Stream Deck.</p>
+    <div class="cta">
+      <a class="btn btn-acc" href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer-Setup.exe">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>
+        Скачать для Windows
+      </a>
+      <a class="btn btn-ghost" href="#how">Как это работает</a>
+    </div>
+    <div class="meta" id="meta">&nbsp;</div>
+    <div class="shot-hero">
+      <div class="window"><div class="bar"><img src="favicon.png" alt=""><b>PolyPlayer</b><i>&#x2014;</i><i>&#x25A2;</i><i>&#x2715;</i></div><img src="img/app-main.png" alt="Окно PolyPlayer: три потока, один играет" width="1180" height="356"></div>
+      <div class="deck" aria-hidden="true">
+        <img src="img/key-playing.png" alt=""><img src="img/key-stopped.png" alt=""><img src="img/key-stopall.png" alt="">
+        <img src="img/key-finale.png" alt=""><img src="img/key-next.png" alt=""><img src="img/key-panel.png" alt="">
+      </div>
+    </div>
+    <div class="fade-bottom"></div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="kicker">Зачем</div>
+    <h2>Музыка звучит вовремя — даже когда у компьютера никого нет</h2>
+    <p class="sub">Перед началом, в перерыве, в конце. Обычно за этим следит человек у ноутбука. PolyPlayer снимает с него эту задачу.</p>
+    <div class="problem">
+      <div class="pcard"><div class="t">До начала</div><b>Встречаем гостей</b><p>В 9:40 тихо включается спокойный плейлист, а к 9:55 сам плавно затихает — можно начинать.</p></div>
+      <div class="pcard"><div class="t">Перерыв</div><b>Одна кнопка</b><p>Нажали на пульте — музыка мягко нарастает. Нажали ещё раз — пауза, без резких обрывов.</p></div>
+      <div class="pcard"><div class="t">Финал</div><b>Свой плейлист на выход</b><p>Включили «Финал» — текущая музыка сама уступает место, переход плавный.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <div class="kicker">Возможности</div>
+    <h2>Всё, что нужно для фоновой музыки, и ничего лишнего</h2>
+    <p class="sub">Простой интерфейс, с которым справится человек без технического опыта, — и аккуратная работа со звуком под капотом.</p>
+    <div class="features">
+      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8c3-3 6 3 9 0s6 3 9 0M3 16c3-3 6 3 9 0s6 3 9 0"/></svg></div><b>Несколько потоков</b><p>У каждого потока своя папка с музыкой, громкость и цвет. Включайте по одному или смешивайте.</p></div>
+      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 18c5 0 5-12 10-12h6M4 6c5 0 5 12 10 12h6"/></svg></div><b>Плавные переходы</b><p>Нарастание, затухание и перетекание треков друг в друга — настраивается в секундах.</p></div>
+      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></div><b>Расписание</b><p>По дням недели и времени: включить, выключить или остановить всю музыку к началу.</p></div>
+      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/></svg></div><b>Пульт Stream Deck</b><p>Каждый поток — на своей кнопке с названием и цветом. Плагин ставится вместе с программой.</p></div>
+      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v9M6.3 7.3a8 8 0 1 0 11.4 0"/></svg></div><b>Работает в фоне</b><p>Запускается вместе с Windows и прячется к часам. Закрыли окно — музыка продолжает играть.</p></div>
+      <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></div><b>Обновляется сам</b><p>Сообщает о новой версии при запуске и никогда не перезапускается, пока играет музыка.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="kicker">Расписание</div>
+    <h2>Настроили один раз — работает каждую неделю</h2>
+    <div class="trio">
+      <p><b>«С — до».</b> Поток включится в нужное время и сам плавно затихнет к концу.</p>
+      <p><b>«Все потоки».</b> К началу плавно остановится любая музыка, какая бы ни играла.</p>
+      <p><b>Ручное управление.</b> Включили поток сами — расписание не будет мешать.</p>
+    </div>
+    <div class="frame wide"><img src="img/app-schedule.png" alt="Расписание PolyPlayer: три правила на будни" width="1160" height="227"></div>
+  </div>
+</section>
+
+<section id="streamdeck">
+  <div class="wrap split">
+    <div>
+      <div class="kicker">Stream Deck</div>
+      <h2>Управление с пульта, не подходя к компьютеру</h2>
+      <ul>
+        <li>Кнопка горит цветом потока, когда он играет, и показывает громкость.</li>
+        <li>Нажать — пуск или пауза, удерживать — стоп. На кнопке видно, что произойдёт.</li>
+        <li>«Стоп всё», «Следующий трек» и кнопка самой программы.</li>
+        <li>На Stream Deck + — громкость крутилкой.</li>
+      </ul>
+    </div>
+    <div class="keys">
+      <figure><img src="img/key-playing.png" alt=""><figcaption>Поток играет</figcaption></figure>
+      <figure><img src="img/key-stopped.png" alt=""><figcaption>Поток на паузе</figcaption></figure>
+      <figure><img src="img/key-hold-stop.png" alt=""><figcaption>Удержание — стоп</figcaption></figure>
+      <figure><img src="img/key-stopall.png" alt=""><figcaption>Стоп всё</figcaption></figure>
+      <figure><img src="img/key-next.png" alt=""><figcaption>Следующий трек</figcaption></figure>
+      <figure><img src="img/key-panel.png" alt=""><figcaption>Окно программы</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="kicker">Как начать</div>
+    <h2>Три шага до первой музыки</h2>
+    <p class="sub">Установка занимает минуту, права администратора не нужны.</p>
+    <div class="steps">
+      <div class="step"><b>Установите</b><p>Скачайте PolyPlayer и запустите установщик. Если есть Stream Deck, плагин предложится сам.</p></div>
+      <div class="step"><b>Создайте потоки</b><p>Укажите для каждого потока папку с музыкой и дайте ему название — оно появится на кнопке пульта.</p></div>
+      <div class="step"><b>Включайте или запланируйте</b><p>Запускайте кнопкой в программе или на пульте, а регулярное — поставьте в расписание.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="kicker">Для кого</div>
+    <h2>Везде, где музыка должна звучать фоном</h2>
+    <div class="who"><span>Общины и клубы</span><span>Конференции и мероприятия</span><span>Кафе и рестораны</span><span>Магазины и шоурумы</span><span>Спортзалы и студии</span><span>Школы и актовые залы</span><span>Стримы и подкасты</span></div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="kicker">Вопросы</div>
+    <h2>Частые вопросы</h2>
+    <div class="faq">
+      <details><summary>Это бесплатно?</summary><p>Да. PolyPlayer бесплатный, с открытым исходным кодом под лицензией GPL v3.</p></details>
+      <details><summary>Обязательно нужен Stream Deck?</summary><p>Нет. Всем можно управлять мышью в окне программы. Stream Deck просто делает это удобнее: музыку можно включать, не подходя к компьютеру.</p></details>
+      <details><summary>Какие файлы подходят?</summary><p>MP3, M4A, WAV, FLAC, OGG — обычные файлы в папке на компьютере, подпапки тоже учитываются. Музыку из стриминговых сервисов PolyPlayer не играет.</p></details>
+      <details><summary>Нужен ли интернет?</summary><p>Нет. Музыка играет с компьютера. Интернет нужен только для проверки обновлений.</p></details>
+      <details><summary>Почему Windows предупреждает при установке?</summary><p>У программы пока нет платной цифровой подписи, поэтому Windows показывает «Windows защитил ваш компьютер». Нажмите «Подробнее» → «Выполнить в любом случае». Исходный код открыт — его можно проверить на GitHub.</p></details>
+      <details><summary>Stream Deck установили позже PolyPlayer — что делать?</summary><p>В PolyPlayer откройте «Настройки» → «Установить плагин». Или скачайте <a href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer.streamDeckPlugin">плагин отдельно</a> и откройте его двойным щелчком.</p></details>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="final">
+    <h2>Попробуйте PolyPlayer бесплатно</h2>
+    <p>Без регистрации и рекламы. Во время работы интернет не нужен.</p>
+    <a class="btn btn-acc" href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer-Setup.exe">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>
       Скачать PolyPlayer
     </a>
-    <div class="ver" id="ver">Для Windows 10 и 11</div>
-  </section>
-
-  <div class="cards">
-    <div class="card"><b>Несколько потоков</b><span>Своя папка с музыкой у каждого потока, плавные переходы.</span></div>
-    <div class="card"><b>Расписание</b><span>Музыка включается и выключается сама в нужное время.</span></div>
-    <div class="card"><b>Пульт Stream Deck</b><span>Каждый поток на своей кнопке, плагин ставится сам.</span></div>
   </div>
+  <footer>
+    <span>© PolyPlayer · открытый код, лицензия GPL v3</span>
+    <span><a href="https://github.com/polyplayer-app/polyplayer">GitHub</a> · <a href="https://github.com/polyplayer-app/polyplayer/releases">Все версии</a> · <a href="https://github.com/polyplayer-app/polyplayer/issues">Сообщить о проблеме</a></span>
+  </footer>
+</div>
 
-  <h2>Установка</h2>
-  <ol>
-    <li>Нажмите «Скачать PolyPlayer» и запустите скачанный файл.</li>
-    <li>Если Windows покажет «Windows защитил ваш компьютер», нажмите «Подробнее» → «Выполнить в любом случае».</li>
-    <li>Если на компьютере установлен Stream Deck, после первого запуска PolyPlayer предложит установить плагин для пульта.</li>
-  </ol>
-  <p class="small">Дальше PolyPlayer обновляется сам: при запуске он сообщает о новой версии и предлагает её установить. Плагин для Stream Deck можно скачать и отдельно: <a id="plg" href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer.streamDeckPlugin">PolyPlayer.streamDeckPlugin</a>.</p>
-
-  <footer>Открытый исходный код · <a href="https://github.com/polyplayer-app/polyplayer">GitHub</a> · лицензия GPL v3</footer>
-</main>
 <script>
-// версия и дата последнего выпуска — с GitHub
+// номер и дата последней версии — с GitHub
 fetch('https://api.github.com/repos/polyplayer-app/polyplayer/releases/latest').then((r) => r.ok ? r.json() : null).then((rel) => {
   if (!rel || !rel.tag_name) return;
   const d = new Date(rel.published_at);
   const date = isNaN(d) ? '' : d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).replace(/\s*г\.?$/, '');
-  document.getElementById('ver').innerHTML = 'Версия\u00a0' + rel.tag_name.replace(/^v/, '') + (date ? ' от\u00a0' + date.replace(/ /g, '\u00a0') : '') + ' · Windows\u00a010 и\u00a011 · <a href="' + rel.html_url + '">что нового</a>';
+  document.getElementById('meta').innerHTML = 'Версия ' + rel.tag_name.replace(/^v/, '') + (date ? ' от ' + date.replace(/ /g, ' ') : '') + ' · <a href="' + rel.html_url + '">что нового</a>';
 }).catch(() => {});
 </script>
 </body>
