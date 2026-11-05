@@ -1,6 +1,6 @@
 {
   "Name": "PolyPlayer",
-  "Version": "3.0.0.0",
+  "Version": "3.0.1.0",
   "Author": "PolyPlayer",
   "Description": "Пульт для программы PolyPlayer: потоки, следующий трек, стоп всё, показать окно.",
   "UUID": "com.polyplayer.deck",

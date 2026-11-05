@@ -13,7 +13,7 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const { createClient } = require('./client.js');
-const KeyName = require('./keyname.js'); // одинаковый размер названий, поля, лимиты
+const KeyName = require('./keyname.js'); // раскладка названия на кнопке: до 2 строк, поля от краёв
 
 // картинки кнопки «PolyPlayer»: закрыт / в трее / открыт
 const PANEL_IMG = {};
@@ -187,7 +187,7 @@ function streamKeySvg(s, rt) {
   svg += glyph(st, 12, 20, 18, accent);
   if (on) svg += '<circle cx="124" cy="29" r="8" fill="' + s.color + '"/><circle cx="124" cy="29" r="12" fill="none" stroke="' + s.color + '" stroke-opacity="0.45" stroke-width="3"/>';
   else svg += '<circle cx="124" cy="29" r="7" fill="none" stroke="' + ink + '" stroke-opacity="0.5" stroke-width="2"/>';
-  svg += KeyName.textSvg(KeyName.check(s.name).lines, 72, 44, 114, ink);
+  svg += KeyName.textSvg(KeyName.forStream(s), 72, 44, 114, ink);
   svg += '<rect x="12" y="122" width="120" height="10" rx="5" fill="#000" fill-opacity="0.45"/>';
   if (vol > 0) svg += '<rect x="12" y="122" width="' + Math.max(10, 1.2 * vol).toFixed(1) + '" height="10" rx="5" fill="' + accent + '"/>';
   svg += '</svg>';
@@ -210,7 +210,7 @@ function chooseKeySvg(p, i, n) {
   svg += '<rect width="144" height="144" fill="#262626"/>';
   svg += '<rect x="5" y="5" width="134" height="134" rx="14" fill="none" stroke="' + p.color + '" stroke-width="5" stroke-dasharray="14 9"/>';
   svg += textBlock([(i + 1) + '/' + n], 72, 16, 44, 120, 24, p.color);
-  svg += KeyName.textSvg(KeyName.check(p.name).lines, 72, 48, 122, '#F2E6CC', 120);
+  svg += KeyName.textSvg(KeyName.forStream(p), 72, 48, 122, '#F2E6CC');
   svg += '</svg>';
   return svgUri(svg);
 }

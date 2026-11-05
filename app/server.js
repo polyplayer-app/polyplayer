@@ -257,11 +257,22 @@ function createApp(opts) {
 
   const stream = (id) => config.streams.find((s) => s.id === id);
 
+  // раскладка названия на кнопке Stream Deck (её считает окно программы по настоящему шрифту)
+  function cleanLayout(k, name) {
+    if (!k || typeof k !== 'object' || !Array.isArray(k.lines) || !k.lines.length || k.lines.length > 2) return undefined;
+    const size = Number(k.size);
+    if (!(size >= 10 && size <= 30)) return undefined;
+    return { name: String(k.name != null ? k.name : name), size: Math.round(size * 10) / 10, lines: k.lines.map((l) => String(l).slice(0, 60)) };
+  }
+
   function normalizeStream(s, old) {
     const base = old || { id: newId(), color: COLORS[config.streams.length % COLORS.length], volume: 60 };
+    const name = String(s.name || base.name || 'Поток').trim().slice(0, 60) || 'Поток';
+    const keyLayout = cleanLayout(s.keyLayout !== undefined ? s.keyLayout : base.keyLayout, name);
     return {
       id: base.id,
-      name: String(s.name || base.name || 'Поток').trim().slice(0, 40) || 'Поток',
+      name,
+      keyLayout: keyLayout && keyLayout.name === name ? keyLayout : undefined,
       folder: String(s.folder != null ? s.folder : (base.folder || '')).trim(),
       color: /^#[0-9a-f]{6}$/i.test(s.color || '') ? s.color : base.color,
       shuffle: s.shuffle != null ? !!s.shuffle : (base.shuffle != null ? base.shuffle : true),
@@ -589,6 +600,15 @@ function createApp(opts) {
       case 'openEngine':
         launchEngine(false);
         break;
+      case 'keyLayouts': { // окно программы досчитало раскладку названий для кнопок пульта
+        let dirty = false;
+        for (const st of config.streams) {
+          const k = cleanLayout(msg.layouts && msg.layouts[st.id], st.name);
+          if (k && k.name === st.name && JSON.stringify(k) !== JSON.stringify(st.keyLayout)) { st.keyLayout = k; dirty = true; }
+        }
+        if (dirty) { saveNow(); changed('config'); }
+        break;
+      }
       case 'saveSettings':
         if (msg.autoOpen != null) config.autoOpen = !!msg.autoOpen;
         if (msg.solo != null) config.solo = !!msg.solo;
@@ -657,7 +677,7 @@ function createApp(opts) {
     }
     clients.add(conn);
     const snap = snapshot();
-    conn.send({ t: 'hello', role, duplicate, config: snap.config, runtime: snap.runtime, engineOnline: snap.engineOnline, next: snap.next, tray: snap.tray, window: snap.window, platform: process.platform, app: !!opts.isApp, update: updateInfo });
+    conn.send({ t: 'hello', role, duplicate, config: snap.config, runtime: snap.runtime, engineOnline: snap.engineOnline, next: snap.next, tray: snap.tray, window: snap.window, platform: process.platform, app: !!opts.isApp, update: updateInfo, about: opts.about || null });
     if (role === 'engine') {
       lastPong = Date.now();
       unacked.clear();

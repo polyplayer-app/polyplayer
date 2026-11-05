@@ -167,9 +167,10 @@ function applyAutostart() {
 // Устанавливается только по кнопке в «Настройках» и только когда музыка не играет.
 const UPDATE_REPO = process.env.POLYPLAYER_UPDATE_REPO || (() => { try { return require('./package.json').updateRepo || ''; } catch (e) { return ''; } })();
 const UPDATE_API = process.env.POLYPLAYER_UPDATE_API || 'https://api.github.com'; // для тестов
-const upd = { current: app.getVersion(), status: UPDATE_REPO ? 'idle' : 'off', version: '', progress: 0, error: '', file: '' };
+const upd = { current: app.getVersion(), status: UPDATE_REPO ? 'idle' : 'off', version: '', progress: 0, error: '', file: '', checkedAt: '', notes: '', url: '', dismissed: '' };
 let updBusy = false;
-const updPublic = () => ({ current: upd.current, status: upd.status, version: upd.version, progress: upd.progress, error: upd.error });
+const updPublic = () => ({ current: upd.current, status: upd.status, version: upd.version, progress: upd.progress, error: upd.error, checkedAt: upd.checkedAt, notes: upd.notes, url: upd.url, dismissed: upd.dismissed });
+const RELEASES_URL = UPDATE_REPO ? 'https://github.com/' + UPDATE_REPO + '/releases' : '';
 function updSet(patch) { Object.assign(upd, patch); if (core) core.setUpdate(updPublic()); }
 function newer(a, b) { // a > b ?
   const pa = String(a).replace(/^v/, '').split('.').map((x) => parseInt(x, 10) || 0);
@@ -178,17 +179,24 @@ function newer(a, b) { // a > b ?
   return false;
 }
 async function checkForUpdate(manual) {
-  if (!UPDATE_REPO || updBusy || upd.status === 'ready') return;
+  if (!UPDATE_REPO || updBusy) return;
+  if (upd.status === 'ready') { if (manual) updSet({}); return; }
   updBusy = true;
   if (manual) updSet({ status: 'checking', error: '' });
   try {
     const r = await net.fetch(UPDATE_API + '/repos/' + UPDATE_REPO + '/releases/latest', { headers: { 'User-Agent': 'PolyPlayer', Accept: 'application/vnd.github+json' } });
-    if (r.status === 404) { updSet({ status: 'latest', error: '' }); return; } // релизов ещё нет
+    const now = new Date().toISOString();
+    if (r.status === 404) { updSet({ status: 'latest', error: '', checkedAt: now, url: RELEASES_URL }); return; } // выпусков ещё нет
     if (!r.ok) throw new Error('GitHub ответил ' + r.status);
     const rel = await r.json();
     const ver = String(rel.tag_name || '').replace(/^v/, '');
     const asset = (rel.assets || []).find((a) => /^PolyPlayer-Setup-.*\.exe$/i.test(a.name));
-    if (!ver || !asset || !newer(ver, upd.current)) { updSet({ status: 'latest', version: '', error: '' }); return; }
+    if (!ver || !asset || !newer(ver, upd.current)) {
+      // «Что нового» — описание установленной версии
+      updSet({ status: 'latest', version: '', error: '', checkedAt: now, url: RELEASES_URL + '/tag/v' + upd.current });
+      return;
+    }
+    upd.checkedAt = now; upd.notes = String(rel.body || ''); upd.url = rel.html_url || (RELEASES_URL + '/tag/v' + ver);
     core.log('Update available: ' + ver);
     const dir = path.join(app.getPath('userData'), 'updates');
     fs.mkdirSync(dir, { recursive: true });
@@ -217,7 +225,7 @@ async function checkForUpdate(manual) {
     updSet({ status: 'ready', version: ver, file, progress: 100 });
   } catch (e) {
     core.log('Update check failed: ' + e.message);
-    updSet({ status: manual ? 'error' : (upd.status === 'downloading' ? 'error' : 'idle'), error: manual || upd.status === 'downloading' ? e.message : '' });
+    updSet({ status: manual || upd.status === 'downloading' ? 'error' : 'idle', error: manual || upd.status === 'downloading' ? e.message : '', checkedAt: new Date().toISOString() });
   } finally { updBusy = false; }
 }
 function installUpdate() {
@@ -259,6 +267,7 @@ app.whenReady().then(async () => {
     dataDir: process.env.POLYPLAYER_DATA_DIR || undefined, // для тестов
     port: process.env.POLYPLAYER_PORT ? parseInt(process.env.POLYPLAYER_PORT, 10) : undefined,
     trayProvider,
+    about: { version: app.getVersion(), date: (() => { try { return require('./package.json').releaseDate || ''; } catch (e) { return ''; } })() },
     autoOpen: false, // окно создаём сами
     launchHook: (hidden) => {
       if (!win || win.isDestroyed()) createWindow(!hidden);
@@ -283,9 +292,13 @@ app.whenReady().then(async () => {
   createWindow(!START_HIDDEN);
   applyAutostart();
   core.on('change', (kind) => { if (kind === 'config') applyAutostart(); });
-  core.on('updateCmd', (cmd) => { if (cmd === 'install') installUpdate(); else checkForUpdate(true); });
+  core.on('updateCmd', (cmd) => {
+    if (cmd === 'install') installUpdate();
+    else if (cmd === 'later') updSet({ dismissed: upd.version }); // окно об обновлении больше не показываем до следующего запуска
+    else checkForUpdate(true);
+  });
   core.setUpdate(updPublic());
-  setTimeout(() => checkForUpdate(false), process.env.POLYPLAYER_UPDATE_API ? 1500 : 20000);
+  setTimeout(() => checkForUpdate(false), process.env.POLYPLAYER_UPDATE_API ? 1500 : 5000);
   setInterval(() => checkForUpdate(false), 6 * 3600 * 1000);
   powerMonitor.on('resume', () => {
     core.log('System resumed');

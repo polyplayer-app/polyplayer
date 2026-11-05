@@ -152,6 +152,15 @@ input.seek:disabled { cursor: default; }
 .set .txt { flex: 1; }
 .set.upd { cursor: default; }
 .btn2.go { background: var(--acc-grad); border-color: transparent; color: #fff; }
+.primary:disabled { opacity: .45; box-shadow: none; cursor: default; }
+.btn2.lnk { color: var(--tx); text-decoration: none; }
+.help-head .hv { display: block; font-size: 12px; font-weight: 500; color: var(--mu); margin-top: 2px; }
+.upd-dlg { width: min(560px, calc(100vw - 32px)); }
+.upd-notes { max-height: 46vh; overflow-y: auto; font-size: 13.5px; line-height: 1.55; color: #D5D7DB; background: var(--s1); border: 1px solid var(--line); border-radius: 12px; padding: 4px 16px; }
+.upd-notes ul { padding-left: 18px; margin: 8px 0; } .upd-notes li { margin: 3px 0; } .upd-notes p { margin: 10px 0; }
+.upd-notes code { background: var(--s3); padding: 1px 5px; border-radius: 5px; font-size: 12.5px; }
+.upd-hint { font-size: 12.5px; color: var(--mu); margin: 12px 0 0; }
+.upd-dlg a { color: var(--mu); font-size: 12.5px; }
 .updot { width: 7px; height: 7px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 8px var(--acc); }
 .set[hidden] { display: none; }
 .set b { display: block; font-weight: 600; font-size: 14px; }
@@ -257,88 +266,106 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
       <span class="switch"><input type="checkbox" id="soloAll"><span></span></span>
     </label>
     <div class="set upd" id="updBox">
-      <div class="txt"><b>Обновления</b><small id="updText">Версия —</small></div>
-      <button class="btn2" id="updBtn" type="button">Проверить</button>
+      <div class="txt"><b id="updHead">Версия —</b><small id="updText"></small></div>
+      <a class="btn2 lnk" id="updNews" href="#" target="_blank" hidden>Что нового</a>
+      <button class="btn2" id="updBtn" type="button">Проверить обновления</button>
     </div>
     <p class="note">ICON:help Крестик прячет окно в значок возле часов — музыка продолжает играть. Выйти из программы: правый клик по значку → «Выйти».</p>
   </section>
 </div>
+<dialog id="updDlg" class="upd-dlg">
+  <div class="dlg">
+    <h2 id="updDlgTitle">Вышла новая версия</h2>
+    <div class="upd-notes" id="updDlgNotes"></div>
+    <p class="upd-hint" id="updDlgHint"></p>
+    <div class="dlg-foot">
+      <a id="updDlgLink" href="#" target="_blank">Подробнее на GitHub</a>
+      <span class="spacer"></span>
+      <button class="ghost" id="updDlgLater" type="button">Позже</button>
+      <button class="primary" id="updDlgNow" type="button">Обновить сейчас</button>
+    </div>
+  </div>
+</dialog>
 <dialog id="helpDlg" class="help-dlg">
   <div class="help">
     <div class="help-head">
       <img src="/icon-256.png" alt="">
-      <h2>Как пользоваться PolyPlayer</h2>
+      <h2>Как пользоваться PolyPlayer<span class="hv" id="helpVer"></span></h2>
       <button class="ghost" id="helpClose" type="button">Закрыть</button>
     </div>
 
-    <p class="lead">PolyPlayer включает фоновую музыку: перед началом мероприятия или служения, под объявления, в перерыве, в конце. Каждый такой набор музыки — это <b>поток</b>. Поток включается одной кнопкой: звук плавно нарастает, а при выключении плавно затихает — без резких обрывов.</p>
+    <p class="lead"><b>PolyPlayer</b> играет фоновую музыку в несколько потоков. <b>Поток</b> — это папка с музыкой и её настройки, например «Плейлист 1» или «Плейлист 2». Каждый поток включается и выключается одной кнопкой — в окне программы или на пульте Stream Deck.</p>
     <p>В программе три вкладки: <b>Потоки</b> — сама музыка, <b>Расписание</b> — что включать и выключать автоматически, <b>Настройки</b>.</p>
 
     <h3>1. Создайте потоки</h3>
-    <p>На вкладке «Потоки» нажмите пустую карточку <b>«Новый поток»</b>. Дайте потоку понятное название — оно будет написано на кнопке пульта, например «Перерыв» или «Финал». Название — одно или два слова, примерно до 7 букв в каждом: так оно поместится на кнопку крупно и одинаково с другими. Рядом с полем видно, как будет выглядеть кнопка. Затем нажмите <b>«Выбрать…»</b> и укажите папку с музыкой. Подойдут обычные файлы mp3, m4a, wav, flac, ogg. Подпапки тоже учитываются.</p>
-    <p>Остальные настройки можно оставить как есть. Если интересно, что они делают:</p>
+    <p>На вкладке «Потоки» нажмите пустую карточку <b>«Новый поток»</b>. Дайте потоку название — оно будет написано на кнопке пульта. Справа от поля видно, как название разместится на кнопке. Затем нажмите <b>«Выбрать…»</b> и укажите папку с музыкой: подойдут файлы mp3, m4a, wav, flac, ogg, подпапки тоже учитываются.</p>
+    <p>Что означают настройки потока:</p>
     <ul>
-      <li><b>Плавный старт и затухание</b> — за сколько секунд музыка набирает громкость при включении и сходит на нет при выключении.</li>
-      <li><b>Переход треков</b> — следующая песня начинается, пока предыдущая ещё затихает, как на радио. Ноль — песни идут друг за другом.</li>
-      <li><b>Перемешивать треки</b> — каждый раз новый порядок.</li>
-      <li><b>Начинать со случайного места</b> — удобно, если в папке один длинный трек на час: при каждом включении он начнётся с нового места.</li>
+      <li><b>Плавный старт и затухание</b> — при включении потока звук нарастает постепенно, а при выключении плавно затихает. Указывается в секундах; 0 — без плавности, звук включается и выключается сразу.</li>
+      <li><b>Переход треков</b> — конец одного трека плавно перетекает в начало следующего, без тишины между ними. В секундах; 0 — треки идут просто друг за другом.</li>
+      <li><b>Перемешивать треки</b> — треки играют в случайном порядке, каждый раз в новом. Без галочки — по алфавиту названий файлов.</li>
+      <li><b>Начинать со случайного места</b> — трек начинается не с начала, а со случайного момента. Удобно для длинных записей, например часового фона: каждый раз звучит другой фрагмент.</li>
+      <li><b>По кругу</b> — когда все треки сыграли, поток начинается заново. Без галочки после последнего трека он остановится.</li>
+      <li><b>Цвет</b> — цвет карточки потока и его кнопки на пульте.</li>
     </ul>
-    <p>Карточки потоков идут по три в ряд, следующие — новым рядом. Порядок меняется стрелками ‹ › на карточке, настройки — карандашом.</p>
+    <p>Порядок карточек меняется стрелками ‹ › на карточке, настройки потока — карандашом.</p>
 
     <h3>2. Включайте музыку</h3>
-    <p>На карточке потока: <b>▶</b> — включить или поставить на паузу, <b>⏭</b> — следующая песня, <b>■</b> — остановить (в следующий раз поток начнётся заново). Тонкая полоса над кнопками показывает, какая часть песни играет: по ней можно щёлкнуть или потянуть, чтобы перемотать. Кнопка <b>«Стоп всё»</b> вверху плавно выключает всё, что играет.</p>
-    <p>Громкость потока — ползунок на его карточке. Программа запоминает её, и в следующий раз поток зазвучит так же. Общую громкость регулируйте ручкой на звуковой карте или пульте.</p>
-    <p>Обычно одновременно играет только один поток: когда вы включаете другой, предыдущий плавно затихает. Это можно выключить во вкладке «Настройки», если нужно смешивать потоки.</p>
+    <p>На карточке потока: <b>▶</b> — включить или пауза, <b>⏭</b> — следующий трек, <b>■</b> — остановить этот поток. <b>Пауза</b> потом продолжит с того же места, а после <b>остановки</b> поток в следующий раз начнётся с начала. Полоса над кнопками показывает, где сейчас трек: по ней можно щёлкнуть или потянуть, чтобы перемотать.</p>
+    <p>Кнопка <b>«Стоп всё»</b> вверху окна плавно выключает всю музыку сразу.</p>
+    <p>Громкость потока — ползунок на его карточке, программа её запоминает. Общую громкость регулируйте на звуковой карте, микшере или значком динамика возле часов.</p>
+    <p>Обычно одновременно играет один поток: например, включили «Плейлист 2», пока играл «Плейлист 1», — первый сам плавно затихнет. Если нужно, чтобы потоки звучали вместе, выключите это во вкладке «Настройки».</p>
 
-    <h3>3. Настройте расписание (по желанию)</h3>
-    <p>Расписание включает и выключает музыку само. На вкладке «Расписание» нажмите <b>«Добавить правило»</b>, выберите поток, дни недели и время.</p>
+    <h3>3. Расписание (по желанию)</h3>
+    <p>Расписание само включает и выключает музыку. На вкладке «Расписание» нажмите <b>«Добавить правило»</b>, выберите поток, дни недели и время.</p>
     <ul>
-      <li><b>«с» и «до»</b> — музыка включится в начале и сама затихнет к концу. Например, воскресенье с 9:40 до 9:55: ровно в 9:55 будет тишина, и можно начинать.</li>
-      <li><b>Только «до»</b> (время «с» убрано крестиком) — программа ничего не включает сама. Но если к этому времени поток играет, она его плавно остановит.</li>
-      <li><b>«Все потоки»</b> (первый пункт в списке) — в указанное время плавно останавливается любая музыка, какая бы ни играла. Удобно поставить такое правило на начало мероприятия.</li>
-      <li>Если в момент автозапуска этот поток уже играет, он просто продолжает играть. Если играет другой поток — включится запланированный.</li>
-      <li>Музыка включается только в само время «с». Если компьютер или программу включили позже — она не запустится сама, включите её кнопкой. Если её выключили вручную — сама она уже не включится до следующего раза.</li>
-      <li>Время «до» должно быть позже времени «с» в тот же день. Правило через полночь (например, с 23:50 до 00:10) не сработает — программа подсветит его.</li>
+      <li><b>«с» и «до»</b> — музыка включится в начале и затихнет к концу. Например, воскресенье с 9:40 до 9:55: ровно в 9:55 будет тишина.</li>
+      <li><b>Только «до»</b> (время «с» убрано крестиком) — программа ничего не включает сама, но если поток играет, к этому времени плавно его остановит.</li>
+      <li><b>«Все потоки»</b> (первый пункт в списке) — в указанное время плавно останавливается любая музыка.</li>
+      <li>Если запланированный поток уже играет, он просто продолжает. Если играет другой — включится запланированный.</li>
+      <li>Музыка включается только в само время «с». Если компьютер или программу включили позже, она сама не запустится — включите её кнопкой. Если поток выключили вручную, сам он уже не включится до следующего раза.</li>
+      <li>Время «до» должно быть позже «с» в тот же день. Правило через полночь (например, с 23:50 до 00:10) не сработает — программа его подсветит.</li>
     </ul>
 
     <h3>4. Окно программы</h3>
-    <p>PolyPlayer — обычная программа Windows. Музыка играет, пока программа запущена, даже когда окна не видно.</p>
-    <p><b>Крестик в углу окна не выключает программу</b> — он прячет окно в значок возле часов, а музыка продолжает играть. Чтобы снова открыть окно, нажмите на этот значок (или на значок PolyPlayer на рабочем столе).</p>
-    <p>Чтобы совсем выйти из программы: правый клик по значку возле часов → <b>«Выйти»</b>. Музыка при этом плавно затихнет. Чтобы просто выключить музыку, нажмите «Стоп всё».</p>
-    <p>Во вкладке «Настройки» включён <b>запуск вместе с компьютером</b>: после включения компьютера программа запустится сама и спрячется к часам.</p>
-
-    <p><b>Обновления.</b> PolyPlayer сам проверяет, вышла ли новая версия, и скачивает её в фоне. Когда она готова, у вкладки «Настройки» появляется точка, а там — кнопка «Установить». Пока играет музыка, установить нельзя: остановите её, нажмите кнопку — программа закроется на несколько секунд и откроется снова. Потоки и расписание сохраняются.</p>
+    <p>Музыка играет, пока PolyPlayer запущен, даже когда окна не видно.</p>
+    <ul>
+      <li><b>Крестик</b> в углу окна не выключает программу: окно прячется в значок возле часов (в правом нижнем углу экрана), музыка продолжает играть. Если значка не видно, нажмите стрелку <b>˄</b> рядом с часами — там спрятанные значки. Открыть окно снова — щелчок по этому значку или по ярлыку PolyPlayer на рабочем столе.</li>
+      <li><b>Выйти совсем</b> — правый клик по значку возле часов → «Выйти». Музыка плавно затихнет.</li>
+      <li><b>Запуск вместе с компьютером</b> (включён во вкладке «Настройки») — после включения компьютера программа запустится сама и спрячется в значок возле часов.</li>
+      <li><b>Обновления</b> — при каждом запуске PolyPlayer проверяет, вышла ли новая версия, и скачивает её. Затем появляется окно с описанием новой версии и кнопками «Обновить сейчас» и «Позже». Обновиться можно и потом — во вкладке «Настройки». Пока играет музыка, обновить нельзя. После нажатия программа закроется на несколько секунд и откроется снова; потоки и расписание сохранятся.</li>
+    </ul>
 
     <h3>5. Пульт Stream Deck</h3>
     <p>Пульт — это кнопки с экранчиками. Каждой кнопке можно назначить поток и включать музыку, не подходя к компьютеру.</p>
     <p><b>Как добавить кнопку:</b></p>
     <ol>
-      <li>Установите плагин PolyPlayer для Stream Deck (файл <b>PolyPlayer.streamDeckPlugin</b> — двойной клик) и откройте программу <b>Stream Deck</b> — её значок тоже возле часов.</li>
-      <li>В списке справа найдите раздел <b>PolyPlayer</b>.</li>
+      <li>Установите плагин: двойной клик по файлу <b>PolyPlayer.streamDeckPlugin</b>.</li>
+      <li>Откройте программу <b>Stream Deck</b> (её значок тоже возле часов) и найдите в списке справа раздел <b>PolyPlayer</b>.</li>
       <li>Перетащите мышкой действие <b>«Поток»</b> на свободную кнопку.</li>
       <li>Дальше всё делается на самом пульте. Кнопка покажет первый поток и подскажет:<br>
-        <span class="mini-keys"><span class="mk">1/3<br><b>ПЕРЕРЫВ</b></span><span class="mk">1 нажатие<br><b>дальше</b><br>2 нажатия<br><b>ок</b></span></span><br>
-        Одно нажатие — показать следующий поток, два быстрых нажатия — выбрать тот, что на экране. Кнопка мигнёт галочкой, и готово.</li>
+        <span class="mini-keys"><span class="mk">1/3<br><b>ПЛЕЙЛИСТ 1</b></span><span class="mk">1 нажатие<br><b>дальше</b><br>2 нажатия<br><b>ок</b></span></span><br>
+        «1/3» — первый из трёх ваших потоков. Одно нажатие — показать следующий поток, два быстрых нажатия — выбрать тот, что на экране. Кнопка мигнёт галочкой, и готово.</li>
     </ol>
-    <p><b>Как пользоваться кнопкой потока:</b></p>
+    <p><b>Кнопка потока:</b></p>
     <ul>
-      <li><b>Нажать</b> — включить или поставить на паузу. Кнопка горит цветом потока, когда он играет, и становится серой на паузе и в остановке. Полоска внизу — громкость.</li>
-      <li><b>Подержать секунду</b> — остановить поток.</li>
-      <li><b>Подержать 3 секунды</b> — выбрать для этой кнопки другой поток, так же: одно нажатие — дальше, два — ок.</li>
+      <li><b>Нажать</b> — включить или пауза. Пока поток играет, кнопка горит его цветом; на паузе и после остановки она серая. Полоска внизу — громкость.</li>
+      <li><b>Подержать 1 секунду</b> — остановить поток.</li>
+      <li><b>Подержать 3 секунды</b> — выбрать для кнопки другой поток, так же: одно нажатие — дальше, два — ок.</li>
     </ul>
     <p><b>Другие кнопки</b> из раздела PolyPlayer:</p>
     <ul>
       <li><b>Стоп всё</b> — плавно выключает всю музыку. Подсвечена, когда что-то играет.</li>
-      <li><b>Следующий трек</b> — следующая песня в том потоке, который сейчас играет. Работает, когда играет один поток, иначе кнопка серая.</li>
-      <li><b>PolyPlayer</b> — показывает, открыта ли программа. Серая — закрыта, нажатие откроет. Тёмная — спрятана к часам, нажатие покажет окно. Коралловая — окно открыто, нажатие спрячет его.</li>
+      <li><b>Следующий трек</b> — следующий трек в том потоке, который сейчас играет. Работает, когда играет ровно один поток, иначе кнопка серая.</li>
+      <li><b>PolyPlayer</b> — показывает состояние программы: серая — закрыта (нажатие откроет), тёмная — спрятана к часам (нажатие покажет окно), коралловая — окно открыто (нажатие спрячет).</li>
     </ul>
-    <p>На пульте с крутилками (Stream Deck +) поток можно повесить и на крутилку: поворот меняет громкость, нажатие — включить или поставить на паузу, касание экранчика — следующая песня.</p>
+    <p>На пульте с крутилками (Stream Deck +) поток можно повесить и на крутилку: поворот — громкость, нажатие — включить или пауза, касание экранчика — следующий трек.</p>
 
     <h3>Если что-то не так</h3>
     <ul>
       <li><b>Кнопка показывает «1/3» и подсказку</b> — ей ещё не выбран поток. Нажмите два раза быстро, когда на экране нужный.</li>
-      <li><b>Кнопки пульта не реагируют</b> — проверьте, запущена ли программа Stream Deck (значок возле часов). Если сам PolyPlayer был закрыт, первое нажатие кнопки запустит его — подождите пару секунд.</li>
-      <li><b>Музыка играет, но не слышно</b> — проверьте громкость на звуковой карте и что в Windows выбрано нужное устройство вывода звука.</li>
+      <li><b>Пульт не реагирует</b> — проверьте, запущена ли программа Stream Deck (значок возле часов). Если PolyPlayer был закрыт, первое нажатие кнопки запустит его — подождите пару секунд.</li>
+      <li><b>Музыка играет, но не слышно</b> — проверьте громкость на звуковой карте и устройство вывода звука: щелчок по значку динамика возле часов → выбор устройства.</li>
       <li><b>Поток не сохраняется</b> — в выбранной папке нет музыкальных файлов. Выберите другую папку.</li>
     </ul>
   </div>
@@ -350,7 +377,7 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
     <div class="field">
       <label class="l">Название — будет написано на кнопке пульта</label>
       <div class="name-row">
-        <div class="name-in"><input type="text" id="fName" maxlength="30" placeholder="Например: ПЕРЕРЫВ"><div class="name-hint" id="nameHint">Одно или два слова, примерно до 7 букв в слове</div></div>
+        <div class="name-in"><input type="text" id="fName" maxlength="60" placeholder="Например: ПЛЕЙЛИСТ 1"><div class="name-hint" id="nameHint">Справа видно, как название разместится на кнопке пульта</div></div>
         <div class="keyprev" id="keyPrev" title="Так название будет выглядеть на кнопке Stream Deck"></div>
       </div>
     </div>
@@ -454,12 +481,12 @@ function connect() {
 function handle(m) {
   if (m.t === 'hello') {
     role = m.role; duplicate = !!m.duplicate; trayAvailable = !!m.tray; platform = m.platform || ''; setTimeout(maybeFirstHelp, 300);
-    config = m.config; nextRun = m.next; engineOnline = m.engineOnline; update = m.update || null;
-    if (role === 'engine') { Engine.init(); Engine.applyConfig(); Engine.report(); } else runtime = m.runtime || {};
+    config = m.config; nextRun = m.next; engineOnline = m.engineOnline; update = m.update || null; about = m.about || null;
+    if (role === 'engine') { Engine.init(); Engine.applyConfig(); Engine.report(); fillKeyLayouts(); } else runtime = m.runtime || {};
     renderAll(); renderUpdate();
   } else if (m.t === 'config') {
     config = m.config; nextRun = m.next;
-    if (role === 'engine') { Engine.applyConfig(); Engine.report(); }
+    if (role === 'engine') { Engine.applyConfig(); Engine.report(); fillKeyLayouts(); }
     renderAll();
   } else if (m.t === 'runtime') {
     if (role !== 'engine') runtime = m.runtime || {};
@@ -852,6 +879,7 @@ const Engine = (() => {
     runtime = snapshot();
     send({ t: 'state', streams: runtime });
     renderStreams();
+    renderUpdate();
   }
 
   return { init, exec, applyConfig, report, progress, seek, debug: () => ({ ctx, ch, curGain }) };
@@ -1093,7 +1121,7 @@ function renderSchedules() {
   box.style.display = config.schedules.length ? '' : 'none';
   if (!config.schedules.length) {
     box.insertAdjacentHTML('afterend', '');
-    if (!$('#schedEmpty')) box.insertAdjacentHTML('beforebegin', '<div class="empty" id="schedEmpty">Правил пока нет. Например: «ПЕРЕРЫВ», воскресенье, с 09:40 до 09:55.</div>');
+    if (!$('#schedEmpty')) box.insertAdjacentHTML('beforebegin', '<div class="empty" id="schedEmpty">Правил пока нет. Например: «ПЛЕЙЛИСТ 1», воскресенье, с 09:40 до 09:55.</div>');
     return;
   }
   const emp = $('#schedEmpty'); if (emp) emp.remove();
@@ -1144,34 +1172,102 @@ function renderSettings() {
   $('#autoOpen').checked = config.autoOpen !== false;
   $('#soloAll').checked = config.solo !== false;
 }
-// ---------- обновления ----------
-let update = null;
+// ---------- версия и обновления ----------
+let update = null, about = null;
 function anyPlaying() { return Object.values(runtime || {}).some((r) => r && r.state === 'playing'); }
+function fmtDate(iso) {
+  const d = new Date(iso); if (isNaN(d)) return '';
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).replace(/\s*г\.?$/, '');
+}
+function fmtCheck(iso) {
+  const d = new Date(iso); if (isNaN(d)) return '';
+  const t = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - today) / 86400000);
+  return (diff === 0 ? 'сегодня' : diff === -1 ? 'вчера' : fmtDate(iso)) + ' в ' + t;
+}
+function versionLine() {
+  const v = (about && about.version) || (update && update.current) || '';
+  if (!v) return '';
+  const d = about && about.date ? fmtDate(about.date) : '';
+  return 'PolyPlayer ' + v + (d ? ' · от ' + d : '');
+}
+// маленький «markdown» для описания выпуска: списки, **жирный**, `код`
+function mdLite(text) {
+  const inline = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>');
+  let html = '', inList = false;
+  for (const raw of String(text || '').split(/\r?\n/)) {
+    const line = raw.trim();
+    const li = /^[-*]\s+(.*)$/.exec(line);
+    if (li) { if (!inList) { html += '<ul>'; inList = true; } html += '<li>' + inline(li[1]) + '</li>'; continue; }
+    if (inList) { html += '</ul>'; inList = false; }
+    if (line) html += '<p>' + inline(line.replace(/^#+\s*/, '')) + '</p>';
+  }
+  return html + (inList ? '</ul>' : '');
+}
 function renderUpdate() {
+  const hv = $('#helpVer'); if (hv) hv.textContent = versionLine();
   const box = $('#updBox'); if (!box) return;
   const u = update;
-  box.hidden = !u;
-  if (!u) return;
-  const btn = $('#updBtn'), txt = $('#updText');
-  let t = 'Установлена версия ' + u.current + '. ';
-  btn.hidden = false; btn.disabled = false; btn.textContent = 'Проверить'; btn.dataset.cmd = 'check'; btn.classList.remove('go');
-  if (u.status === 'checking') { t += 'Проверяю…'; btn.disabled = true; }
-  else if (u.status === 'latest') t += 'Это последняя версия.';
-  else if (u.status === 'downloading') { t += 'Скачиваю версию ' + u.version + '… ' + (u.progress || 0) + '%'; btn.disabled = true; }
+  box.hidden = !u && !about;
+  const btn = $('#updBtn'), txt = $('#updText'), news = $('#updNews');
+  const head = versionLine().replace(/^PolyPlayer /, 'Версия ') || 'Версия —';
+  let t = '';
+  btn.hidden = false; btn.disabled = false; btn.textContent = 'Проверить обновления'; btn.dataset.cmd = 'check'; btn.classList.remove('go');
+  news.hidden = !(u && u.url);
+  if (u && u.url) news.href = u.url;
+  const checked = u && u.checkedAt ? 'Последняя проверка обновлений: ' + fmtCheck(u.checkedAt) : '';
+  if (!u || u.status === 'off') { t = 'Обновления не настроены.'; btn.hidden = true; }
+  else if (u.status === 'checking') { t = 'Проверяю обновления…'; btn.disabled = true; }
+  else if (u.status === 'downloading') { t = 'Скачиваю версию ' + u.version + '… ' + (u.progress || 0) + '%'; btn.disabled = true; }
   else if (u.status === 'ready') {
-    t += 'Готова версия ' + u.version + '.';
+    t = 'Готова новая версия ' + u.version + '.';
     btn.textContent = 'Установить ' + u.version; btn.dataset.cmd = 'install'; btn.classList.add('go');
-    if (anyPlaying()) { btn.disabled = true; t += ' Остановите музыку, чтобы установить — программа перезапустится на несколько секунд.'; }
+    if (anyPlaying()) { btn.disabled = true; t += ' Остановите музыку, чтобы установить.'; }
     else t += ' Программа закроется на несколько секунд и откроется снова.';
-  } else if (u.status === 'error') t += 'Не удалось проверить обновления' + (u.error ? ': ' + u.error : '') + '.';
-  else if (u.status === 'off') { t += 'Обновления не настроены.'; btn.hidden = true; }
+  } else if (u.status === 'error') t = (checked ? checked + ' — ' : '') + 'не удалось проверить' + (u.error ? ' (' + u.error + ')' : '') + '.';
+  else if (u.status === 'latest') t = checked + ' — у вас последняя версия.';
+  else t = checked ? checked + '.' : 'Проверка обновлений — при запуске программы.';
+  $('#updHead').textContent = head;
   txt.textContent = t;
   const dot = document.querySelector('#tabs button[data-tab="settings"] .updot');
-  if (dot) dot.hidden = u.status !== 'ready';
+  if (dot) dot.hidden = !(u && u.status === 'ready');
+  maybeShowUpdateDialog();
 }
 $('#updBtn').onclick = () => send({ t: 'updateCmd', cmd: $('#updBtn').dataset.cmd || 'check' });
+
+// окно «Вышла новая версия» — только в окне программы, когда оно на экране; «Позже» — до следующего запуска
+const updDlg = $('#updDlg');
+function maybeShowUpdateDialog() {
+  const u = update;
+  if (role !== 'engine' || !u || u.status !== 'ready' || u.dismissed === u.version) { if (updDlg.open && (!u || u.status !== 'ready')) updDlg.close(); return; }
+  const playing = anyPlaying();
+  $('#updDlgNow').disabled = playing;
+  $('#updDlgHint').textContent = playing ? 'Сейчас играет музыка — остановите её, чтобы обновить. Или обновитесь позже во вкладке «Настройки».' : 'Программа закроется на несколько секунд и откроется снова. Потоки и расписание сохранятся.';
+  if (updDlg.open || document.visibilityState !== 'visible' || document.querySelector('dialog[open]')) return;
+  $('#updDlgTitle').textContent = 'Вышла версия ' + u.version;
+  $('#updDlgNotes').innerHTML = mdLite(u.notes) || '<p>Описание выпуска не загрузилось.</p>';
+  $('#updDlgLink').href = u.url || '#';
+  $('#updDlgLink').hidden = !u.url;
+  updDlg.showModal();
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') maybeShowUpdateDialog(); });
+window.addEventListener('focus', maybeShowUpdateDialog);
+$('#updDlgLater').onclick = () => { updDlg.close(); send({ t: 'updateCmd', cmd: 'later' }); };
+$('#updDlgNow').onclick = () => { updDlg.close(); send({ t: 'updateCmd', cmd: 'install' }); };
 $('#autoOpen').onchange = () => send({ t: 'saveSettings', autoOpen: $('#autoOpen').checked });
 $('#soloAll').onchange = () => send({ t: 'saveSettings', solo: $('#soloAll').checked });
+
+function fillKeyLayouts() {
+  const out = {};
+  for (const st of config.streams || []) {
+    const k = st.keyLayout;
+    if (k && k.name === st.name) continue;
+    const l = keyLayoutFor(st.name);
+    if (l) out[st.id] = l;
+  }
+  if (Object.keys(out).length) send({ t: 'keyLayouts', layouts: out });
+}
 
 // ---------- редактор потока ----------
 let editing = null;
@@ -1183,6 +1279,7 @@ function openEditor(id) {
   editing = s ? s.id : null;
   $('#editTitle').textContent = s ? 'Настройки потока' : 'Новый поток';
   $('#fName').value = s ? s.name : '';
+  lastGoodName = $('#fName').value; nameHint(false);
   $('#fFolder').value = s ? s.folder : '';
   $('#fIn').value = s ? s.fadeIn : 3;
   $('#fOut').value = s ? s.fadeOut : 3;
@@ -1199,18 +1296,49 @@ function openEditor(id) {
   if (!s) $('#fName').focus();
 }
 // предпросмотр кнопки Stream Deck и проверка длины названия
+// ---------- название на кнопке Stream Deck ----------
+// ширину считаем настоящим шрифтом этого компьютера — тем же, которым рисует кнопку Stream Deck
+const keyCanvas = document.createElement('canvas').getContext('2d');
+function measureKey(text, size) { keyCanvas.font = '900 ' + size + 'px ' + KeyName.FAMILY; return keyCanvas.measureText(text).width; }
+function keyLayoutFor(name) {
+  const n = String(name || '').trim();
+  const l = KeyName.layout(n, measureKey);
+  return l ? { name: n, size: l.size, lines: l.lines } : null;
+}
+const NAME_HINT = 'Справа видно, как название разместится на кнопке пульта';
+let lastGoodName = '';
+let hintTimer = null;
 function renderKeyPreview() {
-  const r = KeyName.check($('#fName').value);
-  const hint = $('#nameHint');
-  hint.className = 'name-hint' + (r.ok || !$('#fName').value.trim() ? '' : ' bad');
-  hint.textContent = r.ok || !$('#fName').value.trim() ? 'Одно или два слова, примерно до 7 букв в слове' : r.error;
+  const name = $('#fName').value;
+  const lay = keyLayoutFor(name) || KeyName.forStream({ name: name.trim() });
   $('#keyPrev').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144"><rect width="144" height="144" fill="#1E2A44"/>' +
     '<rect width="144" height="10" fill="' + pickColor + '"/><path d="M12 20l18 9l-18 9z" fill="' + pickColor + '"/>' +
-    '<circle cx="124" cy="29" r="8" fill="' + pickColor + '"/>' + KeyName.textSvg(r.lines, 72, 44, 114, '#F2E6CC') +
+    '<circle cx="124" cy="29" r="8" fill="' + pickColor + '"/>' + KeyName.textSvg(lay, 72, 44, 114, '#F2E6CC') +
     '<rect x="12" y="122" width="120" height="10" rx="5" fill="#000" fill-opacity="0.45"/><rect x="12" y="122" width="72" height="10" rx="5" fill="' + pickColor + '"/></svg>';
-  return r;
 }
-$('#fName').addEventListener('input', renderKeyPreview);
+function nameHint(bad) {
+  const h = $('#nameHint');
+  h.className = 'name-hint' + (bad ? ' bad' : '');
+  h.textContent = bad ? 'Дальше не помещается на кнопку — название уже самое мелкое из возможных' : NAME_HINT;
+  clearTimeout(hintTimer);
+  if (bad) hintTimer = setTimeout(() => nameHint(false), 3000);
+}
+// лишнее, что не помещается на кнопку даже мелким шрифтом, просто не вводится
+$('#fName').addEventListener('input', () => {
+  const el = $('#fName');
+  let v = el.value;
+  if (!keyLayoutFor(v)) {
+    const caret = el.selectionStart;
+    if (v.length - lastGoodName.length > 1) { while (v && !keyLayoutFor(v)) v = v.slice(0, -1); } // вставили длинный текст — обрезаем
+    else v = lastGoodName; // напечатали лишнюю букву — не принимаем её
+    el.value = v;
+    const pos = Math.max(0, Math.min(v.length, (caret || v.length) - 1));
+    try { el.setSelectionRange(pos, pos); } catch (e) { /* ignore */ }
+    nameHint(true);
+  }
+  lastGoodName = el.value;
+  renderKeyPreview();
+});
 function renderSwatches() {
   $('#swatches').innerHTML = COLORS.map((c) => '<button type="button" class="swc' + (c === pickColor ? ' on' : '') + '" style="background:' + c + '" data-c="' + c + '"></button>').join('');
   $('#swatches').querySelectorAll('.swc').forEach((b) => { b.onclick = () => { pickColor = b.dataset.c; renderSwatches(); }; });
@@ -1232,15 +1360,15 @@ $('#cancelBtn').onclick = () => dlg.close();
 $('#saveBtn').onclick = async () => {
   const name = $('#fName').value.trim();
   if (!name) { $('#fName').focus(); toast('Дайте потоку название'); return; }
-  const nk = renderKeyPreview();
-  if (!nk.ok) { $('#fName').focus(); toast(nk.error); return; }
+  const keyLayout = keyLayoutFor(name);
+  if (!keyLayout) { $('#fName').focus(); toast('Название не помещается на кнопку — сократите его'); return; }
   const folder = $('#fFolder').value.trim();
   if (!folder) { $('#fFolder').focus(); toast('Выберите папку с музыкой'); return; }
   let count = 0;
   try { count = (await (await fetch('/api/scan?path=' + encodeURIComponent(folder))).json()).count; } catch (e) { /* сеть */ }
   if (!count) { checkFolder(); toast('В папке нет аудиофайлов — поток не сохранён'); return; }
   const stream = {
-    id: editing || undefined, name, folder, color: pickColor,
+    id: editing || undefined, name, keyLayout, folder, color: pickColor,
     fadeIn: +$('#fIn').value, fadeOut: +$('#fOut').value, crossfade: +$('#fXf').value,
     shuffle: $('#fShuffle').checked, randomStart: $('#fRandStart').checked, loop: $('#fLoop').checked
   };
@@ -1286,7 +1414,11 @@ $('#browseBtn').onclick = () => {
 };
 function setPicked(p) {
   $('#fFolder').value = p;
-  if (!$('#fName').value.trim()) { $('#fName').value = p.split(/[\\/]/).filter(Boolean).pop().toUpperCase().slice(0, 30); renderKeyPreview(); }
+  if (!$('#fName').value.trim()) {
+    let v = p.split(/[\\/]/).filter(Boolean).pop().toUpperCase();
+    while (v && !keyLayoutFor(v)) v = v.slice(0, -1).trim();
+    $('#fName').value = v; lastGoodName = v; renderKeyPreview();
+  }
   checkFolder();
 }
 function onFolderPicked(m) {

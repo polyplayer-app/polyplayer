@@ -1,7 +1,8 @@
 {
   "name": "polyplayer",
   "productName": "PolyPlayer",
-  "version": "3.0.0",
+  "version": "3.0.1",
+  "releaseDate": "2026-11-05",
   "description": "PolyPlayer — несколько музыкальных потоков, расписание и пульт Stream Deck",
   "main": "main.js",
   "author": "PolyPlayer",
