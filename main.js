@@ -3,7 +3,7 @@
 // Окно и значок в трее принадлежат самой программе: крестик прячет окно в трей, музыка продолжает играть.
 'use strict';
 
-const { app, BrowserWindow, Tray, Menu, dialog, nativeImage, shell, powerMonitor, net } = require('electron');
+const { app, BrowserWindow, Tray, Menu, dialog, nativeImage, shell, powerMonitor, net, globalShortcut } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
@@ -286,6 +286,47 @@ function offerStreamDeckPlugin() {
   } catch (e) { core.log('Plugin offer error: ' + e.message); }
 }
 
+// ---------- горячие клавиши ----------
+// Работают во всей системе, даже когда окно спрятано. Назначает их пользователь (по умолчанию — никаких).
+// Если сочетание уже занято другой программой, Windows его не отдаст — окно покажет предупреждение.
+let hotkeysPaused = false;
+let hotkeysKey = '';
+function hotkeyMap() {
+  const cfg = core.snapshot().config;
+  const map = [];
+  for (const st of cfg.streams || []) if (st.hotkey) map.push({ acc: st.hotkey, run: () => core.command({ cmd: 'toggle', id: st.id }) });
+  const hk = cfg.hotkeys || {};
+  if (hk.stopAll) map.push({ acc: hk.stopAll, run: () => { if (isPlaying()) core.command({ cmd: 'stopAll' }); } });
+  if (hk.next) map.push({
+    acc: hk.next,
+    run: () => {
+      const rt = core.snapshot().runtime || {};
+      const playing = Object.keys(rt).filter((id) => rt[id] && rt[id].state === 'playing');
+      if (playing.length === 1) core.command({ cmd: 'next', id: playing[0] }); // как на пульте: только когда играет один поток
+    }
+  });
+  return map;
+}
+function applyHotkeys(force) {
+  if (!core) return;
+  const map = hotkeysPaused ? [] : hotkeyMap();
+  const key = JSON.stringify(map.map((m) => m.acc)) + (hotkeysPaused ? 'p' : '');
+  if (key === hotkeysKey && !force) return;
+  hotkeysKey = key;
+  try { globalShortcut.unregisterAll(); } catch (e) { /* ignore */ }
+  const failed = [];
+  const seen = new Set();
+  for (const m of map) {
+    if (seen.has(m.acc)) continue; // одно сочетание — одно действие (повторы окно не даст сохранить)
+    seen.add(m.acc);
+    let ok = false;
+    try { ok = globalShortcut.register(m.acc, m.run); } catch (e) { ok = false; }
+    if (!ok) failed.push(m.acc);
+  }
+  if (failed.length) core.log('Hotkeys not available (used by another program): ' + failed.join(', '));
+  if (!hotkeysPaused) core.setHotkeyStatus({ failed });
+}
+
 // ---------- перенос настроек из старой версии (SWP Player) ----------
 // потоки и расписание лежали в %APPDATA%\SWP Player — при первом запуске копируем их в %APPDATA%\PolyPlayer
 function migrateOldSettings() {
@@ -336,10 +377,12 @@ app.whenReady().then(async () => {
   createWindow(!START_HIDDEN);
   applyAutostart();
   core.on('change', (kind) => {
-    if (kind === 'config') applyAutostart();
+    if (kind === 'config') { applyAutostart(); applyHotkeys(); }
     if (kind === 'runtime' && isPlaying() !== trayPlaying) updateTrayMenu(); // «Стоп всё» в меню — только когда что-то играет
   });
   core.on('installPlugin', openBundledPlugin);
+  core.on('hotkeysPause', (on) => { hotkeysPaused = !!on; applyHotkeys(); });
+  applyHotkeys(true);
   core.on('updateCmd', (cmd) => {
     if (cmd === 'install') installUpdate();
     else if (cmd === 'download') downloadUpdate();
@@ -361,4 +404,5 @@ app.on('second-instance', (e, argv) => {
 });
 
 app.on('before-quit', () => { quitting = true; });
+app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch (e) { /* ignore */ } });
 app.on('window-all-closed', (e) => { /* остаёмся в трее */ });

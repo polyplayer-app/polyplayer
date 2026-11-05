@@ -216,7 +216,8 @@ function createApp(opts) {
 
   // --- настройки ---
   // solo — общая настройка: играет только один поток, остальные плавно затихают (по умолчанию включено)
-  let config = { version: 1, port: DEFAULT_PORT, autoOpen: true, solo: true, streams: [], schedules: [] };
+  // hotkeys — горячие клавиши для «Стоп всё» и «Следующий трек» (у потоков — свои, в stream.hotkey)
+  let config = { version: 1, port: DEFAULT_PORT, autoOpen: true, solo: true, hotkeys: { stopAll: '', next: '' }, streams: [], schedules: [] };
   // настройки + резервная копия: если config.json повреждён, берём копию, а повреждённый файл сохраняем рядом
   const backupFile = path.join(dataDir, 'config.backup.json');
   const readJson = (f) => { const o = JSON.parse(fs.readFileSync(f, 'utf8')); if (!o || typeof o !== 'object' || !Array.isArray(o.streams)) throw new Error('bad config'); return o; };
@@ -257,6 +258,12 @@ function createApp(opts) {
 
   const stream = (id) => config.streams.find((s) => s.id === id);
 
+  // горячая клавиша в формате Electron: «Ctrl+Alt+1», «Ctrl+Shift+K», «F13», «Alt+num5»
+  function cleanHotkey(v) {
+    const k = String(v || '').trim();
+    return /^(?:(?:Ctrl|Alt|Shift)\+){0,3}(?:[A-Z0-9]|F(?:[1-9]|1\d|2[0-4])|num[0-9])$/.test(k) ? k : '';
+  }
+
   // раскладка названия на кнопке Stream Deck (её считает окно программы по настоящему шрифту)
   function cleanLayout(k, name) {
     if (!k || typeof k !== 'object' || !Array.isArray(k.lines) || !k.lines.length || k.lines.length > 2) return undefined;
@@ -278,6 +285,7 @@ function createApp(opts) {
       shuffle: s.shuffle != null ? !!s.shuffle : (base.shuffle != null ? base.shuffle : true),
       loop: s.loop != null ? !!s.loop : (base.loop != null ? base.loop : true),
       solo: s.solo != null ? !!s.solo : (base.solo != null ? !!base.solo : true),
+      hotkey: cleanHotkey(s.hotkey !== undefined ? s.hotkey : base.hotkey),
       randomStart: s.randomStart != null ? !!s.randomStart : !!base.randomStart,
       volume: clamp(Math.round(Number(s.volume != null ? s.volume : base.volume) || 0), 0, 100),
       fadeIn: clamp(Number(s.fadeIn != null ? s.fadeIn : (base.fadeIn != null ? base.fadeIn : 3)) || 0, 0, 30),
@@ -612,6 +620,9 @@ function createApp(opts) {
       case 'saveSettings':
         if (msg.autoOpen != null) config.autoOpen = !!msg.autoOpen;
         if (msg.solo != null) config.solo = !!msg.solo;
+        if (msg.hotkeys && typeof msg.hotkeys === 'object') {
+          config.hotkeys = { stopAll: cleanHotkey(msg.hotkeys.stopAll), next: cleanHotkey(msg.hotkeys.next) };
+        }
         saveNow();
         changed('config');
         break;
@@ -623,6 +634,9 @@ function createApp(opts) {
         break;
       case 'showWindow':
         app.showWindow();
+        break;
+      case 'hotkeysPause': // пока в окне вводят сочетание клавиш, горячие клавиши не срабатывают
+        app.emit('hotkeysPause', !!msg.on);
         break;
       case 'installPlugin': // «Установить плагин Stream Deck» — обрабатывает main.js
         app.emit('installPlugin');
@@ -680,7 +694,7 @@ function createApp(opts) {
     }
     clients.add(conn);
     const snap = snapshot();
-    conn.send({ t: 'hello', role, duplicate, config: snap.config, runtime: snap.runtime, engineOnline: snap.engineOnline, next: snap.next, tray: snap.tray, window: snap.window, platform: process.platform, app: !!opts.isApp, update: updateInfo, about: opts.about || null });
+    conn.send({ t: 'hello', role, duplicate, config: snap.config, runtime: snap.runtime, engineOnline: snap.engineOnline, next: snap.next, tray: snap.tray, window: snap.window, platform: process.platform, app: !!opts.isApp, update: updateInfo, about: opts.about || null, hotkeyStatus });
     if (role === 'engine') {
       lastPong = Date.now();
       unacked.clear();
@@ -769,6 +783,9 @@ function createApp(opts) {
   };
   // сведения об обновлении (их заполняет main.js) — показываются во вкладке «Настройки»
   let updateInfo = null;
+  // какие горячие клавиши не удалось занять (их уже использует другая программа) — заполняет main.js
+  let hotkeyStatus = { failed: [] };
+  app.setHotkeyStatus = (st) => { hotkeyStatus = st || { failed: [] }; broadcast({ t: 'hotkeys', status: hotkeyStatus }); };
   app.setUpdate = (info) => { updateInfo = info; broadcast({ t: 'update', update: info }); };
   app.dataDir = dataDir;
   return app;

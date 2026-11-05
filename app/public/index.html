@@ -135,6 +135,16 @@ input.seek:disabled { cursor: default; }
 .name-in { flex: 1; min-width: 0; }
 .name-hint { font-size: 12px; color: var(--mu); margin-top: 6px; }
 .name-hint.bad { color: #FF8A8D; }
+.hk-in { cursor: pointer; caret-color: transparent; font-variant-numeric: tabular-nums; }
+.hk-in.rec { border-color: var(--acc); box-shadow: 0 0 0 3px rgba(255,106,77,.18); }
+.hk-in.bad { border-color: #E5484D; }
+.hk-set { cursor: default; }
+.hk-grid { display: grid; max-width: 440px; grid-template-columns: auto minmax(180px, 260px); gap: 8px 14px; align-items: center; margin-top: 12px; }
+.hk-grid span { font-size: 13.5px; color: var(--tx); }
+.hk-grid input { width: 100%; background: var(--s2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 11px; color: var(--tx); color-scheme: dark; font: inherit; font-size: 14px; }
+.hk-grid input:focus { outline: none; }
+.tag.hk { color: var(--tx); }
+.tag.hk.bad { color: #FF8A8D; border-color: rgba(229,72,77,.45); }
 .keyprev { width: 72px; height: 72px; border-radius: 12px; overflow: hidden; flex: none; box-shadow: 0 0 0 1px var(--line2), 0 8px 20px -10px #000; }
 .keyprev svg { display: block; width: 72px; height: 72px; }
 .srow .del { margin-left: auto; }
@@ -279,6 +289,15 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
       <div class="txt"><b>Играет только один поток</b><small>Когда включаете поток, тот, что играл, плавно затихает. Выключите, если нужно смешивать потоки</small></div>
       <span class="switch"><input type="checkbox" id="soloAll"><span></span></span>
     </label>
+    <div class="set hk-set">
+      <div class="txt"><b>Горячие клавиши</b><small>Работают во всей системе, даже когда окно PolyPlayer свёрнуто. Сочетание для потока назначается в его настройках. Нажмите на поле и затем нужное сочетание; Backspace — убрать.</small>
+        <div class="hk-grid">
+          <span>Стоп всё</span><input type="text" id="hkStopAll" class="hk-in" readonly placeholder="Не назначена">
+          <span>Следующий трек</span><input type="text" id="hkNext" class="hk-in" readonly placeholder="Не назначена">
+        </div>
+        <div class="name-hint" id="hkSetHint"></div>
+      </div>
+    </div>
     <div class="set upd" id="plugBox" hidden>
       <div class="txt"><b>Плагин для Stream Deck</b><small>Ставится сам вместе с программой. Если Stream Deck установили позже или плагин пропал — нажмите «Установить плагин», и Stream Deck его установит.</small></div>
       <button class="btn2" id="plugBtn" type="button">Установить плагин</button>
@@ -335,6 +354,7 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
         <li><b>Начинать со случайного места</b> — трек начинается не с начала, а со случайного момента. Удобно для длинных записей, например часового фона: каждый раз звучит другой фрагмент.</li>
         <li><b>По кругу</b> — когда все треки сыграли, поток начинается заново. Без галочки после последнего трека он остановится.</li>
         <li><b>Цвет</b> — цвет карточки потока и его кнопки на пульте.</li>
+        <li><b>Горячая клавиша</b> — сочетание клавиш, которое включает поток или ставит его на паузу. Работает, даже когда окно программы свёрнуто. Нажмите на поле и затем нужное сочетание, например Ctrl + Alt + 1.</li>
       </ul>
     </details>
     <p><b>Изменить или удалить поток</b> — нажмите карандаш на его карточке: откроются те же настройки, а внизу окна есть кнопка «Удалить». Порядок карточек меняется стрелками ‹ › на карточке.</p>
@@ -344,6 +364,7 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
     <img class="shot" src="/help/card.png" width="370" alt="">
     <p>Кнопка <b>«Стоп всё»</b> вверху окна плавно выключает всю музыку сразу. Она активна, только когда что-то играет.</p>
     <img class="shot" src="/help/stop-all.png" width="138" alt="">
+    <p><b>Горячие клавиши</b> — у каждого потока может быть своё сочетание клавиш, оно назначается в настройках потока. Сочетания для «Стоп всё» и «Следующего трека» задаются во вкладке «Настройки». Горячие клавиши работают во всей системе, даже когда окно PolyPlayer свёрнуто.</p>
     <p><b>Громкость потока</b> — ползунок на его карточке, программа её запоминает. Общую громкость регулируйте на звуковой карте, микшере или значком динамика возле часов.</p>
     <p>Обычно одновременно играет один поток: например, включили «Плейлист 2», пока играл «Плейлист 1», — первый сам плавно затихнет. Если нужно, чтобы потоки звучали вместе, выключите это во вкладке «Настройки».</p>
     <p>Музыка играет, пока PolyPlayer запущен, даже когда окна не видно. <b>Крестик</b> в углу окна не выключает программу: окно прячется в трей — значок возле часов, музыка продолжает играть. Чтобы полностью выйти из программы, щёлкните правой кнопкой по значку возле часов → <b>«Выйти»</b>.</p>
@@ -358,6 +379,7 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
     <ul>
       <li><b>Запуск вместе с компьютером</b> — после включения компьютера программа запустится сама и спрячется в трей.</li>
       <li><b>Играет только один поток</b> — когда включаете поток, тот, что играл, плавно затихает. Выключите, чтобы потоки могли звучать вместе.</li>
+      <li><b>Горячие клавиши</b> — сочетания для «Стоп всё» и «Следующего трека». Если сочетание уже занято другой программой, PolyPlayer подсветит его красным — выберите другое.</li>
       <li><b>Плагин для Stream Deck</b> — кнопка «Установить плагин», если Stream Deck установили позже PolyPlayer.</li>
       <li><b>Версия и обновления</b> — при запуске PolyPlayer сам проверяет, вышла ли новая версия, и предлагает её установить. Проверить вручную — кнопкой «Проверить обновления».</li>
     </ul>
@@ -409,6 +431,11 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
       <label class="l">Папка с музыкой</label>
       <div class="row"><input type="text" id="fFolder" placeholder="D:\Музыка\Перерыв"><button class="btn2" id="browseBtn" type="button">Выбрать…</button></div>
       <div class="folder-info" id="folderInfo"></div>
+    </div>
+    <div class="field">
+      <label class="l">Горячая клавиша — необязательно</label>
+      <div class="row"><input type="text" id="fHotkey" class="hk-in" readonly placeholder="Нажмите, чтобы назначить"><button class="btn2" id="fHotkeyClear" type="button">Убрать</button></div>
+      <div class="name-hint" id="fHotkeyHint"></div>
     </div>
     <div class="three">
       <div class="field"><label class="l">Плавный старт</label><div class="unit"><input type="number" id="fIn" min="0" max="30" step="0.5"></div></div>
@@ -505,7 +532,7 @@ function connect() {
 function handle(m) {
   if (m.t === 'hello') {
     role = m.role; duplicate = !!m.duplicate; trayAvailable = !!m.tray; platform = m.platform || ''; setTimeout(maybeFirstHelp, 300);
-    config = m.config; nextRun = m.next; engineOnline = m.engineOnline; update = m.update || null; about = m.about || null;
+    config = m.config; nextRun = m.next; engineOnline = m.engineOnline; update = m.update || null; about = m.about || null; hotkeyStatus = m.hotkeyStatus || { failed: [] };
     if (role === 'engine') { Engine.init(); Engine.applyConfig(); Engine.report(); fillKeyLayouts(); } else runtime = m.runtime || {};
     renderAll(); renderUpdate();
   } else if (m.t === 'config') {
@@ -530,6 +557,8 @@ function handle(m) {
     }
     if (m.at && Date.now() - m.at > 30000) return; // слишком старая команда (окно было «заморожено»)
     Engine.exec(m);
+  } else if (m.t === 'hotkeys') {
+    hotkeyStatus = m.status || { failed: [] }; renderStreams(); renderSettings();
   } else if (m.t === 'update') {
     update = m.update; renderUpdate();
   } else if (m.t === 'saved') {
@@ -982,6 +1011,7 @@ const STATE_LABEL = { playing: 'Играет', paused: 'Пауза', stopped: '�
 function streamMeta(s) {
   const folder = s.folder ? s.folder.split(/[\\/]/).filter(Boolean).pop() : 'папка не выбрана';
   const bits = ['<span class="tag">' + ICON.folder + esc(folder) + '</span>'];
+  if (s.hotkey) bits.push('<span class="tag hk' + (hotkeyFailed(s.hotkey) ? ' bad' : '') + '" title="' + (hotkeyFailed(s.hotkey) ? 'Сочетание занято другой программой' : 'Горячая клавиша') + '">' + esc(prettyHotkey(s.hotkey)) + '</span>');
   bits.push('<span class="tag">плавно ' + s.fadeIn + ' / ' + s.fadeOut + ' с</span>');
   if (s.crossfade > 0) bits.push('<span class="tag">переход ' + s.crossfade + ' с</span>');
   if (s.shuffle) bits.push('<span class="tag">' + ICON.shuffle + 'перемешать</span>');
@@ -1196,7 +1226,85 @@ $('#addSched').onclick = () => {
 function renderSettings() {
   $('#autoOpen').checked = config.autoOpen !== false;
   $('#soloAll').checked = config.solo !== false;
+  const hk = config.hotkeys || {};
+  setHotkeyField($('#hkStopAll'), hk.stopAll || '');
+  setHotkeyField($('#hkNext'), hk.next || '');
+  const bad = [hk.stopAll, hk.next].filter((k) => k && hotkeyFailed(k));
+  $('#hkSetHint').className = 'name-hint' + (bad.length ? ' bad' : '');
+  $('#hkSetHint').textContent = bad.length ? 'Сочетание ' + bad.map(prettyHotkey).join(', ') + ' уже занято другой программой — выберите другое.' : '';
 }
+
+// ---------- горячие клавиши ----------
+// Формат как в Electron: «Ctrl+Alt+1», «Ctrl+Shift+K», «F13», «Alt+num5».
+// Разрешены сочетания минимум из двух клавиш-модификаторов (одна из них Ctrl или Alt) или F13–F24:
+// так горячая клавиша не перехватит обычный ввод текста и привычные сочетания других программ.
+let hotkeyStatus = { failed: [] };
+function hotkeyFailed(acc) { return (hotkeyStatus.failed || []).includes(acc); }
+function prettyHotkey(acc) { return String(acc || '').split('+').map((p) => (/^num\d$/.test(p) ? 'Num ' + p.slice(3) : p)).join(' + '); }
+function setHotkeyField(el, acc) {
+  if (el === document.activeElement) return;
+  el.dataset.acc = acc || '';
+  el.value = acc ? prettyHotkey(acc) : '';
+  el.classList.toggle('bad', !!acc && hotkeyFailed(acc));
+}
+function keyName(e) {
+  const c = e.code || '';
+  let m;
+  if ((m = /^Key([A-Z])$/.exec(c))) return m[1];
+  if ((m = /^Digit(\d)$/.exec(c))) return m[1];
+  if ((m = /^Numpad(\d)$/.exec(c))) return 'num' + m[1];
+  if ((m = /^F(\d{1,2})$/.exec(c)) && +m[1] >= 1 && +m[1] <= 24) return 'F' + m[1];
+  return '';
+}
+// где ещё используется сочетание (кроме самого поля)
+function hotkeyOwner(acc, self) {
+  const hk = config.hotkeys || {};
+  if (self !== 'stopAll' && hk.stopAll === acc) return '«Стоп всё»';
+  if (self !== 'next' && hk.next === acc) return '«Следующий трек»';
+  const st = (config.streams || []).find((x) => x.hotkey === acc && x.id !== self);
+  return st ? 'потоку «' + st.name + '»' : '';
+}
+// поле ввода сочетания: нажали на поле → нажимаете сочетание; Backspace/Delete — убрать; Esc — отменить
+function hotkeyInput(el, hintEl, self, onSet, defaultHint) {
+  const hint = (t, bad) => { hintEl.textContent = t || defaultHint || ''; hintEl.className = 'name-hint' + (bad ? ' bad' : ''); };
+  el.addEventListener('focus', () => {
+    el.dataset.before = el.dataset.acc || '';
+    el.classList.add('rec'); el.value = ''; el.placeholder = 'Нажмите сочетание…';
+    hint('Например, Ctrl + Alt + 1. Backspace — убрать, Esc — отменить.');
+    send({ t: 'hotkeysPause', on: true }); // пока вводят, существующие горячие клавиши не срабатывают
+  });
+  el.addEventListener('blur', () => {
+    el.classList.remove('rec'); el.placeholder = el.id === 'fHotkey' ? 'Нажмите, чтобы назначить' : 'Не назначена';
+    el.value = el.dataset.acc ? prettyHotkey(el.dataset.acc) : '';
+    send({ t: 'hotkeysPause', on: false });
+    if (!hintEl.classList.contains('bad')) hint('');
+  });
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') return;
+    e.preventDefault(); e.stopPropagation();
+    if (e.key === 'Escape') { el.dataset.acc = el.dataset.before || ''; hint(''); el.blur(); return; }
+    if (e.key === 'Backspace' || e.key === 'Delete') { el.dataset.acc = ''; onSet(''); hint(''); el.blur(); return; }
+    const mods = [e.ctrlKey && 'Ctrl', e.altKey && 'Alt', e.shiftKey && 'Shift'].filter(Boolean);
+    const k = keyName(e);
+    if (!k) { el.value = mods.length ? mods.join(' + ') + ' + …' : ''; return; }
+    const acc = mods.concat([k]).join('+');
+    const fKey = /^F(1[3-9]|2[0-4])$/.test(k);
+    if (!fKey && !(mods.length >= 2 && (e.ctrlKey || e.altKey))) {
+      el.value = prettyHotkey(acc);
+      hint('Нужно сочетание хотя бы из двух клавиш-модификаторов, например Ctrl + Alt + 1 или Ctrl + Shift + K.', true);
+      return;
+    }
+    const owner = hotkeyOwner(acc, self());
+    if (owner) { el.value = prettyHotkey(acc); hint(prettyHotkey(acc) + ' уже назначено ' + owner + '.', true); return; }
+    el.dataset.acc = acc; onSet(acc); hint('');
+    el.blur();
+  });
+}
+hotkeyInput($('#fHotkey'), $('#fHotkeyHint'), () => editing, () => {}, 'Работает, даже когда окно программы свёрнуто.');
+$('#fHotkeyClear').onclick = () => { $('#fHotkey').dataset.acc = ''; $('#fHotkey').value = ''; $('#fHotkeyHint').className = 'name-hint'; $('#fHotkeyHint').textContent = 'Работает, даже когда окно программы свёрнуто.'; };
+function saveHotkeys() { send({ t: 'saveSettings', hotkeys: { stopAll: $('#hkStopAll').dataset.acc || '', next: $('#hkNext').dataset.acc || '' } }); }
+hotkeyInput($('#hkStopAll'), $('#hkSetHint'), () => 'stopAll', saveHotkeys, '');
+hotkeyInput($('#hkNext'), $('#hkSetHint'), () => 'next', saveHotkeys, '');
 // ---------- версия и обновления ----------
 let update = null, about = null;
 function anyPlaying() { return Object.values(runtime || {}).some((r) => r && r.state === 'playing'); }
@@ -1361,6 +1469,11 @@ function openEditor(id) {
   $('#fName').value = s ? s.name : '';
   lastGoodName = $('#fName').value; nameHint(false);
   $('#fFolder').value = s ? s.folder : '';
+  $('#fHotkey').dataset.acc = s && s.hotkey ? s.hotkey : '';
+  $('#fHotkey').value = s && s.hotkey ? prettyHotkey(s.hotkey) : '';
+  $('#fHotkey').classList.toggle('bad', !!(s && s.hotkey && hotkeyFailed(s.hotkey)));
+  $('#fHotkeyHint').className = 'name-hint' + (s && s.hotkey && hotkeyFailed(s.hotkey) ? ' bad' : '');
+  $('#fHotkeyHint').textContent = s && s.hotkey && hotkeyFailed(s.hotkey) ? 'Это сочетание уже занято другой программой — выберите другое.' : 'Работает, даже когда окно программы свёрнуто.';
   $('#fIn').value = s ? s.fadeIn : 3;
   $('#fOut').value = s ? s.fadeOut : 3;
   $('#fXf').value = s ? (s.crossfade != null ? s.crossfade : 5) : 5;
@@ -1448,7 +1561,7 @@ $('#saveBtn').onclick = async () => {
   try { count = (await (await fetch('/api/scan?path=' + encodeURIComponent(folder))).json()).count; } catch (e) { /* сеть */ }
   if (!count) { checkFolder(); toast('В папке нет аудиофайлов — поток не сохранён'); return; }
   const stream = {
-    id: editing || undefined, name, keyLayout, folder, color: pickColor,
+    id: editing || undefined, name, keyLayout, folder, color: pickColor, hotkey: $('#fHotkey').dataset.acc || '',
     fadeIn: +$('#fIn').value, fadeOut: +$('#fOut').value, crossfade: +$('#fXf').value,
     shuffle: $('#fShuffle').checked, randomStart: $('#fRandStart').checked, loop: $('#fLoop').checked
   };
