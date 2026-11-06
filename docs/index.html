@@ -14,6 +14,10 @@
 <style>
 @font-face { font-family: Inter; src: url(Inter-cyrillic.woff2) format('woff2'); font-weight: 100 900; unicode-range: U+0400-04FF; }
 @font-face { font-family: Inter; src: url(Inter-latin.woff2) format('woff2'); font-weight: 100 900; }
+@font-face { font-family: Unbounded; src: url(fonts/unbounded-cyrillic-wght-normal.woff2) format('woff2'); font-weight: 200 900; font-display: swap; unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: Unbounded; src: url(fonts/unbounded-latin-wght-normal.woff2) format('woff2'); font-weight: 200 900; font-display: swap; }
+@font-face { font-family: "Playfair Display"; src: url(fonts/playfair-display-cyrillic-400-italic.woff2) format('woff2'); font-style: italic; font-weight: 400; font-display: swap; unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Playfair Display"; src: url(fonts/playfair-display-latin-400-italic.woff2) format('woff2'); font-style: italic; font-weight: 400; font-display: swap; }
 :root {
   --bg: #121317; --s1: #1A1C21; --s2: #20232A; --line: rgba(255,255,255,.08); --line2: rgba(255,255,255,.14);
   --tx: #EEEFF1; --mu: #9A9DA6; --mu2: #6E717A;
@@ -25,7 +29,9 @@ body { margin: 0; background: var(--bg); color: var(--tx); font: 16px/1.6 Inter,
 a { color: inherit; }
 .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
 p, li, h1, h2, h3 { text-wrap: pretty; }
-h1, h2 { text-wrap: balance; }
+h1, h2, .sub, .lead { text-wrap: balance; }
+h1, h2, .brand { font-family: Unbounded, Inter, sans-serif; }
+h1 em, h2 em { font-family: "Playfair Display", Georgia, serif; font-style: italic; font-weight: 400; letter-spacing: 0; font-size: 1.1em; line-height: 1; }
 
 /* навигация */
 nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px); background: rgba(18,19,23,.72); border-bottom: 1px solid var(--line); }
@@ -48,8 +54,8 @@ nav .btn { padding: 9px 16px; font-size: 14px; }
 .hero::before { content: ""; position: absolute; inset: -120px 0 auto; height: 560px; background: radial-gradient(640px 320px at 50% 30%, rgba(255,106,77,.20), transparent 70%); pointer-events: none; }
 .badge { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--mu); border: 1px solid var(--line2); border-radius: 999px; padding: 6px 14px; margin-bottom: 26px; position: relative; }
 .badge i { width: 7px; height: 7px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 10px var(--acc); }
-h1 { font-size: clamp(36px, 5.6vw, 60px); line-height: 1.08; letter-spacing: -.03em; margin: 0 auto 20px; max-width: 820px; position: relative; }
-h1 em { font-style: normal; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+h1 { font-size: clamp(30px, 4.8vw, 54px); font-weight: 600; line-height: 1.14; letter-spacing: -.02em; margin: 0 auto 20px; max-width: 820px; position: relative; }
+h1 em, h2 em { background: var(--grad); padding-right: .06em; -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hero .lead { font-size: clamp(17px, 2vw, 20px); color: var(--mu); max-width: 660px; margin: 0 auto 34px; position: relative; }
 .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; }
 .cta .btn { padding: 15px 26px; font-size: 17px; }
@@ -69,7 +75,7 @@ h1 em { font-style: normal; background: var(--grad); -webkit-background-clip: te
 /* секции */
 section { padding: 96px 0 0; }
 .kicker { color: var(--acc); font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 12px; }
-h2 { font-size: clamp(28px, 3.6vw, 40px); line-height: 1.15; letter-spacing: -.02em; margin: 0 0 14px; }
+h2 { font-size: clamp(24px, 3.1vw, 36px); font-weight: 600; line-height: 1.2; letter-spacing: -.015em; margin: 0 0 14px; }
 .sub { color: var(--mu); font-size: 18px; max-width: 640px; margin: 0 0 40px; }
 
 .problem { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -193,7 +199,7 @@ footer a:hover { color: var(--tx); }
 <section id="who">
   <div class="wrap">
     <div class="kicker">Для кого</div>
-    <h2>Создан для тех, кто управляет звуком в зале</h2>
+    <h2>Создан для тех, кто <em>управляет звуком</em> в зале</h2>
     <p class="sub">PolyPlayer решает одну задачу, но делает это безупречно: даёт удобный контроль над фоновой музыкой там, где громоздкий платный софт будет избыточен.</p>
     <div class="who"><span>Богослужения</span><span>Конференции</span><span>Школьные мероприятия</span><span>Антракты спектаклей и концертов</span></div>
   </div>
@@ -202,7 +208,7 @@ footer a:hover { color: var(--tx); }
 <section id="about">
   <div class="wrap">
     <div class="kicker">Как устроено</div>
-    <h2>Каждый поток — независимый плеер</h2>
+    <h2>Каждый поток — <em>независимый плеер</em></h2>
     <p class="sub">Создавайте сколько угодно потоков: у каждого своя папка, громкость и настройки. При переключении PolyPlayer делает плавный кроссфейд — один поток затихает, другой нарастает, без пауз и резких скачков громкости.</p>
     <div class="features">
       <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7c3-3 6 3 9 0s6 3 9 0M3 12c3-3 6 3 9 0s6 3 9 0M3 17c3-3 6 3 9 0s6 3 9 0"/></svg></div><b>Сколько угодно потоков</b><p>Количество потоков не ограничено. У каждого свой цвет, поэтому их легко различать.</p></div>
@@ -215,7 +221,7 @@ footer a:hover { color: var(--tx); }
 <section id="control">
   <div class="wrap">
     <div class="kicker">Управление</div>
-    <h2>Четыре способа управлять музыкой</h2>
+    <h2>Четыре способа <em>управлять музыкой</em></h2>
     <p class="sub">Пользуйтесь одним из них или сочетайте несколько. В окне программы всегда видно, какой поток играет сейчас.</p>
     <div class="features four">
       <div class="f"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5"/><path d="M10 9v4l3.5-2z"/><path d="M8 21h8"/></svg></div><b>Окно программы</b><p>Всё на виду: сразу понятно, какой поток играет, и у каждого свой регулятор громкости.</p></div>
@@ -229,7 +235,7 @@ footer a:hover { color: var(--tx); }
 <section>
   <div class="wrap">
     <div class="kicker">Расписание</div>
-    <h2>Музыка включается сама</h2>
+    <h2>Музыка включается <em>сама</em></h2>
     <p class="sub wide">Укажите поток, дни недели и время: в начале промежутка поток включится сам, а к концу плавно затихнет. Правило «Все потоки» в указанное время выключает любую музыку.</p>
     <div class="frame wide"><img src="img/app-schedule.png" alt="Расписание PolyPlayer: три правила на будни" width="1160" height="227"></div>
   </div>
@@ -239,7 +245,7 @@ footer a:hover { color: var(--tx); }
   <div class="wrap split">
     <div>
       <div class="kicker">Пульт Stream Deck</div>
-      <h2>Каждый поток — на своей кнопке</h2>
+      <h2>Каждый поток — <em>на своей кнопке</em></h2>
       <p class="sd-intro"><b>Stream Deck</b> — пульт Elgato с кнопками-экранчиками, каждой из которых назначается своё действие.</p>
       <p class="sd-intro">PolyPlayer устанавливает на пульт свой плагин: каждый поток получает отдельную кнопку с названием, цветом и шкалой громкости. Пока поток играет, кнопка светится. Нажатие включает поток или ставит его на паузу, удержание — останавливает. Есть и отдельные кнопки «Стоп всё» и «Следующий трек», а на Stream Deck + громкость потока меняется поворотом регулятора.</p>
       <p class="sd-note">Плагин устанавливается вместе с программой, а если пульт появился позже — из настроек PolyPlayer. Stream Deck не обязателен: всё то же самое можно делать в окне программы или горячими клавишами.</p>
@@ -259,7 +265,7 @@ footer a:hover { color: var(--tx); }
 <section id="how">
   <div class="wrap">
     <div class="kicker">Как начать</div>
-    <h2>Первый запуск — за пару минут</h2>
+    <h2>Первый запуск — <em>за пару минут</em></h2>
     <p class="sub">Скачайте и установите PolyPlayer, права администратора не нужны. Дальше три шага:</p>
     <div class="steps">
       <div class="step"><b>Подготовьте папки</b><p>Разложите музыку по папкам: одна папка — один поток.</p></div>
@@ -272,7 +278,7 @@ footer a:hover { color: var(--tx); }
 <section id="faq">
   <div class="wrap">
     <div class="kicker">Вопросы</div>
-    <h2>Частые вопросы</h2>
+    <h2>Частые <em>вопросы</em></h2>
     <div class="faq">
       <details><summary>Это действительно бесплатно?</summary><p>Да. PolyPlayer — программа с открытым исходным кодом (лицензия GPL v3). В ней нет подписок, рекламы и платных версий.</p></details>
       <details><summary>Нужен ли интернет?</summary><p>Нет. Музыка играет из папок на вашем компьютере. Интернет нужен только для того, чтобы программа узнала о выходе новой версии.</p></details>
@@ -286,7 +292,7 @@ footer a:hover { color: var(--tx); }
 
 <div class="wrap">
   <div class="final">
-    <h2>Попробуйте PolyPlayer</h2>
+    <h2>Попробуйте <em>PolyPlayer</em></h2>
     <p>Бесплатно, без регистрации и рекламы.</p>
     <a class="btn btn-acc" href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer-Setup.exe">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-5-5m5 5l5-5M5 20h14"/></svg>
