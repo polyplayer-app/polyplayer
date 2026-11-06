@@ -16,8 +16,8 @@
 @font-face { font-family: Inter; src: url(Inter-latin.woff2) format('woff2'); font-weight: 100 900; }
 @font-face { font-family: Unbounded; src: url(fonts/unbounded-cyrillic-wght-normal.woff2) format('woff2'); font-weight: 200 900; font-display: swap; unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
 @font-face { font-family: Unbounded; src: url(fonts/unbounded-latin-wght-normal.woff2) format('woff2'); font-weight: 200 900; font-display: swap; }
-@font-face { font-family: "Playfair Display"; src: url(fonts/playfair-display-cyrillic-400-italic.woff2) format('woff2'); font-style: italic; font-weight: 400; font-display: swap; unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
-@font-face { font-family: "Playfair Display"; src: url(fonts/playfair-display-latin-400-italic.woff2) format('woff2'); font-style: italic; font-weight: 400; font-display: swap; }
+@font-face { font-family: "Playfair Display"; src: url(fonts/playfair-display-cyrillic-700-italic.woff2) format('woff2'); font-style: italic; font-weight: 700; font-display: swap; unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Playfair Display"; src: url(fonts/playfair-display-latin-700-italic.woff2) format('woff2'); font-style: italic; font-weight: 700; font-display: swap; }
 :root {
   --bg: #121317; --s1: #1A1C21; --s2: #20232A; --line: rgba(255,255,255,.08); --line2: rgba(255,255,255,.14);
   --tx: #EEEFF1; --mu: #9A9DA6; --mu2: #6E717A;
@@ -29,9 +29,10 @@ body { margin: 0; background: var(--bg); color: var(--tx); font: 16px/1.6 Inter,
 a { color: inherit; }
 .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
 p, li, h1, h2, h3 { text-wrap: pretty; }
-h1, h2, .sub, .lead { text-wrap: balance; }
+h1, h2, .lead { text-wrap: balance; }
+.sub, .faq p, .sd-intro, .sd-note { text-align: justify; text-wrap: wrap; hyphens: auto; -webkit-hyphens: auto; hyphenate-limit-chars: 10 4 4; }
 h1, h2, .brand { font-family: Unbounded, Inter, sans-serif; }
-h1 em, h2 em { font-family: "Playfair Display", Georgia, serif; font-style: italic; font-weight: 400; letter-spacing: 0; font-size: 1.1em; line-height: 1; }
+h1 em, h2 em { font-family: "Playfair Display", Georgia, serif; font-style: italic; font-weight: 700; letter-spacing: 0; font-size: 1.08em; line-height: 1; }
 
 /* навигация */
 nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px); background: rgba(18,19,23,.72); border-bottom: 1px solid var(--line); }
@@ -76,7 +77,7 @@ h1 em, h2 em { background: var(--grad); padding-right: .06em; -webkit-background
 section { padding: 96px 0 0; }
 .kicker { color: var(--acc); font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 12px; }
 h2 { font-size: clamp(24px, 3.1vw, 36px); font-weight: 600; line-height: 1.2; letter-spacing: -.015em; margin: 0 0 14px; }
-.sub { color: var(--mu); font-size: 18px; max-width: 640px; margin: 0 0 40px; }
+.sub { color: var(--mu); font-size: 18px; max-width: 700px; margin: 0 0 40px; }
 
 .problem { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .pcard { background: var(--s1); border: 1px solid var(--line); border-radius: 18px; padding: 24px; }
@@ -175,7 +176,7 @@ footer a:hover { color: var(--tx); }
 <header class="hero">
   <div class="wrap">
     <div class="badge"><i></i>Для Windows 10 и 11 · Открытый исходный код</div>
-    <h1>Простой в управлении <em>многопоточный аудиоплеер для мероприятий</em></h1>
+    <h1>Простой в управлении <em>многопоточный аудиоплеер</em> для мероприятий</h1>
     <p class="lead">Настройте независимые плейлисты, запускайте их в нужный момент или по расписанию. Полностью бесплатно и работает без интернета.</p>
     <div class="cta">
       <a class="btn btn-acc" href="https://github.com/polyplayer-app/polyplayer/releases/latest/download/PolyPlayer-Setup.exe">
