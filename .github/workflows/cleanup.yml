@@ -1,0 +1,25 @@
+# Разовая уборка перед версией 1.0.0: удаляет тестовые релизы 3.0.x с их тегами и ветку-черновик.
+name: Cleanup
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/cleanup.yml']
+permissions:
+  contents: write
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Delete 3.0.x releases and tags
+        run: |
+          for t in $(gh release list --limit 100 --json tagName -q '.[].tagName' | grep '^v3\.'); do
+            echo "delete $t"; gh release delete "$t" --cleanup-tag -y
+          done
+          for t in $(gh api "repos/$GH_REPO/tags" -q '.[].name' | grep '^v3\.' || true); do
+            echo "delete tag $t"; gh api -X DELETE "repos/$GH_REPO/git/refs/tags/$t" || true
+          done
+      - name: Delete draft branch
+        run: gh api -X DELETE "repos/$GH_REPO/git/refs/heads/landing-rewrite" || true
