@@ -283,11 +283,11 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
 
   <section class="pane" data-pane="settings" hidden>
     <label class="set">
-      <div class="txt"><b>Запуск вместе с компьютером</b><small>После включения компьютера PolyPlayer запустится сам и спрячется в значок возле часов</small></div>
+      <div class="txt"><b>Запускать вместе с Windows</b><small>PolyPlayer запустится свёрнутым в трей.</small></div>
       <span class="switch"><input type="checkbox" id="autoOpen"><span></span></span>
     </label>
     <label class="set">
-      <div class="txt"><b>Играет только один поток</b><small>Когда включаете поток, тот, что играл, плавно затихает. Выключите, если нужно смешивать потоки</small></div>
+      <div class="txt"><b>Играет только один поток</b><small>Новый поток плавно сменяет тот, что играл. Выключите, чтобы потоки звучали вместе.</small></div>
       <span class="switch"><input type="checkbox" id="soloAll"><span></span></span>
     </label>
     <div class="set hk-set">
@@ -308,7 +308,7 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
       <a class="btn2 lnk" id="updNews" href="#" target="_blank" hidden>Что нового</a>
       <button class="btn2" id="updBtn" type="button">Проверить обновления</button>
     </div>
-    <p class="note">ICON:help Крестик прячет окно в значок возле часов — музыка продолжает играть. Выйти из программы: правый клик по значку → «Выйти».</p>
+    <p class="note">ICON:help Если закрыть окно, музыка продолжит играть, а PolyPlayer останется в трее. Выйти — правый клик по значку → «Выйти».</p>
   </section>
 </div>
 <dialog id="updDlg" class="upd-dlg">
@@ -333,7 +333,7 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
       <button class="ghost" id="helpClose" type="button">Закрыть</button>
     </div>
 
-    <p class="lead"><b>PolyPlayer</b> играет фоновую музыку в несколько потоков. Каждый <b>поток</b> — это плеер, который воспроизводит треки из назначенной папки. Потоки создаются вручную и включаются и выключаются одной кнопкой.</p>
+    <p class="lead"><b>PolyPlayer</b> — многопоточный аудиоплеер. Каждый <b>поток</b> играет музыку из своей папки, а включать потоки можно кнопками, горячими клавишами, с пульта Stream Deck или по расписанию.</p>
     <p>В программе три вкладки: <b>Потоки</b> — список созданных потоков, <b>Расписание</b> — автоматическое включение и выключение потоков, <b>Настройки</b> — общие настройки программы.</p>
 
     <h3>1. Потоки: создание и изменение</h3>
@@ -368,18 +368,18 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
     <p><b>Горячие клавиши</b> — у каждого потока может быть своё сочетание клавиш, оно назначается в настройках потока. Сочетания для «Стоп всё» и «Следующего трека» задаются во вкладке «Настройки». Горячие клавиши работают во всей системе, даже когда окно PolyPlayer свёрнуто.</p>
     <p><b>Громкость потока</b> — ползунок на его карточке, программа её запоминает. Общую громкость регулируйте на звуковой карте, микшере или значком динамика возле часов.</p>
     <p>Обычно одновременно играет один поток: например, включили «Плейлист 2», пока играл «Плейлист 1», — первый сам плавно затихнет. Если нужно, чтобы потоки звучали вместе, выключите это во вкладке «Настройки».</p>
-    <p>Музыка играет, пока PolyPlayer запущен, даже когда окна не видно. <b>Крестик</b> в углу окна не выключает программу: окно прячется в трей — значок возле часов, музыка продолжает играть. Чтобы полностью выйти из программы, щёлкните правой кнопкой по значку возле часов → <b>«Выйти»</b>.</p>
+    <p>Если закрыть окно, музыка не прервётся: PolyPlayer продолжит работать в трее — справа на панели задач, возле часов. Чтобы выйти полностью, щёлкните правой кнопкой по значку PolyPlayer в трее и выберите <b>«Выйти»</b>.</p>
 
     <h3>3. Расписание</h3>
     <p>Расписание само включает и выключает музыку. На вкладке «Расписание» нажмите <b>«Добавить правило»</b>, выберите поток, дни недели и время. Если выбрать <b>«Все потоки»</b>, в указанное время плавно выключится любой играющий поток.</p>
     <img class="shot" src="/help/schedule.png" width="700" alt="">
-    <p class="note2">Музыка включается только в само время «с»: если компьютер включили позже, поток сам не запустится. Без времени «с» правило только выключает поток. Правило через полночь (например, с 23:50 до 00:10) не сработает — программа его подсветит.</p>
+    <p class="note2">Музыка включается только в само время «с»: если компьютер включили позже, поток сам не запустится. Без времени «с» правило только выключает поток. Правило может переходить через полночь: «с 23:50 до 00:10» выключит музыку уже на следующий день.</p>
 
     <h3>4. Настройки</h3>
     <img class="shot" src="/help/settings.png" width="700" alt="">
     <ul>
-      <li><b>Запуск вместе с компьютером</b> — после включения компьютера программа запустится сама и спрячется в трей.</li>
-      <li><b>Играет только один поток</b> — когда включаете поток, тот, что играл, плавно затихает. Выключите, чтобы потоки могли звучать вместе.</li>
+      <li><b>Запускать вместе с Windows</b> — после включения компьютера PolyPlayer запустится сам, свёрнутым в трей.</li>
+      <li><b>Играет только один поток</b> — новый поток плавно сменяет тот, что играл. Выключите, чтобы потоки звучали вместе.</li>
       <li><b>Горячие клавиши</b> — сочетания для «Стоп всё» и «Следующего трека». Если сочетание уже занято другой программой, PolyPlayer подсветит его красным — выберите другое.</li>
       <li><b>Плагин для Stream Deck</b> — кнопка «Установить плагин», если Stream Deck установили позже PolyPlayer.</li>
       <li><b>Версия и обновления</b> — при запуске PolyPlayer сам проверяет, вышла ли новая версия, и предлагает её установить. Проверить вручную — кнопкой «Проверить обновления».</li>
@@ -413,7 +413,8 @@ dialog::backdrop { background: rgba(5,6,8,.65); backdrop-filter: blur(3px); }
       <li><b>Пульт не реагирует</b> — проверьте, что запущена программа Stream Deck. Если PolyPlayer был закрыт, первое нажатие кнопки запустит его — подождите пару секунд.</li>
       <li><b>Музыка играет, но не слышно</b> — проверьте громкость звуковой карты и устройство вывода звука (щелчок по значку динамика возле часов).</li>
       <li><b>Поток не сохраняется</b> — в выбранной папке нет музыкальных файлов.</li>
-      <li><b>Не видно значка возле часов</b> — нажмите стрелку <b>˄</b> рядом с часами: там спрятанные значки.</li>
+      <li><b>На карточке «Папка не найдена»</b> — папку переименовали, удалили или отключили флешку. Верните её на место или выберите другую в настройках потока.</li>
+      <li><b>Не видно значка PolyPlayer в трее</b> — нажмите стрелку <b>˄</b> рядом с часами: там спрятанные значки.</li>
     </ul>
   </div>
 </dialog>
@@ -779,10 +780,11 @@ const Engine = (() => {
     report();
     if (wasStopped) {
       let list = [];
-      try { const r = await fetch('/api/tracks/' + encodeURIComponent(c.id), { cache: 'no-store' }); list = (await r.json()).tracks || []; } catch (e) { /* сеть */ }
+      let missing = false;
+      try { const r = await fetch('/api/tracks/' + encodeURIComponent(c.id), { cache: 'no-store' }); const j = await r.json(); list = j.tracks || []; missing = !!j.missing; } catch (e) { /* сеть */ }
       if (my !== c.op) return;
       c.tracks = list;
-      if (!list.length) { c.state = 'stopped'; c.error = 'В папке нет треков'; report(); return; }
+      if (!list.length) { c.state = 'stopped'; c.error = missing ? 'Папка не найдена' : 'В папке нет треков'; report(); return; }
       makeQueue(c);
       loadCurrent(c);
       fadeTo(c, 0, 0);
@@ -1013,8 +1015,6 @@ function streamMeta(s) {
   const folder = s.folder ? s.folder.split(/[\\/]/).filter(Boolean).pop() : 'папка не выбрана';
   const bits = ['<span class="tag">' + ICON.folder + esc(folder) + '</span>'];
   if (s.hotkey) bits.push('<span class="tag hk' + (hotkeyFailed(s.hotkey) ? ' bad' : '') + '" title="' + (hotkeyFailed(s.hotkey) ? 'Сочетание занято другой программой' : 'Горячая клавиша') + '">' + esc(prettyHotkey(s.hotkey)) + '</span>');
-  bits.push('<span class="tag">плавно ' + s.fadeIn + ' / ' + s.fadeOut + ' с</span>');
-  if (s.crossfade > 0) bits.push('<span class="tag">переход ' + s.crossfade + ' с</span>');
   if (s.shuffle) bits.push('<span class="tag">' + ICON.shuffle + 'перемешать</span>');
   if (s.randomStart) bits.push('<span class="tag">с любого места</span>');
   if (!s.loop) bits.push('<span class="tag">один проход</span>');
@@ -1140,7 +1140,7 @@ setInterval(updateProgress, 250);
 
 // ---------- расписание ----------
 function renderNextRun() {
-  if (!nextRun) { $('#nextRun').innerHTML = config.schedules.length ? 'Ближайших событий нет — проверьте дни и переключатели.' : 'Правила включают и выключают музыку сами, в нужные дни и время.'; return; }
+  if (!nextRun) { $('#nextRun').innerHTML = config.schedules.length ? 'Ближайших событий нет — проверьте дни и переключатели.' : ''; return; }
   const d = new Date(nextRun.at);
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - today) / 86400000);
@@ -1151,7 +1151,7 @@ function renderNextRun() {
 
 function schedMode(sc) {
   if (!sc.start && !sc.end) return 'укажите время';
-  if (sc.start && sc.end && sc.end <= sc.start) return '«до» раньше «с» — не сработает';
+  if (sc.start && sc.end && sc.end === sc.start) return '«с» и «до» совпадают';
   return '';
 }
 
@@ -1177,7 +1177,7 @@ function renderSchedules() {
   box.style.display = config.schedules.length ? '' : 'none';
   if (!config.schedules.length) {
     box.insertAdjacentHTML('afterend', '');
-    if (!$('#schedEmpty')) box.insertAdjacentHTML('beforebegin', '<div class="empty" id="schedEmpty">Правил пока нет. Например: «ПЛЕЙЛИСТ 1», воскресенье, с 09:40 до 09:55.</div>');
+    if (!$('#schedEmpty')) box.insertAdjacentHTML('beforebegin', '<div class="empty" id="schedEmpty">Правил пока нет. Нажмите «Добавить правило», выберите поток, дни и время — PolyPlayer сам включит музыку и плавно выключит её к концу промежутка.</div>');
     return;
   }
   const emp = $('#schedEmpty'); if (emp) emp.remove();

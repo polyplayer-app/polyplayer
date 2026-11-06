@@ -326,7 +326,7 @@ function createApp(opts) {
     let best = null;
     for (const s of config.schedules) {
       if (!s.enabled || !(s.streamId === '*' || stream(s.streamId))) continue;
-      if (s.start && s.end && s.end <= s.start) continue; // правило через полночь не срабатывает
+      if (s.start && s.end && s.end === s.start) continue; // «с» и «до» совпадают — правило пустое
       for (let add = 0; add < 8; add++) {
         const day = new Date(now);
         day.setDate(day.getDate() + add);
@@ -495,19 +495,25 @@ function createApp(opts) {
   function tick() {
     const now = app.now();
     const nowMs = now.getTime();
-    const today = ymd(now);
     let dirty = false;
     for (const s of config.schedules) {
-      if (!s.enabled || !s.days.includes(now.getDay())) continue;
+      if (!s.enabled) continue;
       const all = s.streamId === '*';
       const st = all ? null : stream(s.streamId);
       if (!all && !st) continue;
-      const start = !all && s.start ? atTime(now, s.start) : null;
-      const end = s.end ? atTime(now, s.end) : null;
+      // правило «через полночь» (до < с) начинается в свой день, а заканчивается на следующий —
+      // поэтому вчерашнее правило тоже проверяем
+      const overnight = !all && !!s.start && !!s.end && s.end < s.start;
+      for (const back of overnight ? [0, 1] : [0]) {
+      const day = new Date(now); day.setDate(day.getDate() - back);
+      if (!s.days.includes(day.getDay())) continue;
+      const start = !all && s.start ? atTime(day, s.start) : null;
+      let end = null;
+      if (s.end) { const endDay = new Date(day); if (overnight) endDay.setDate(endDay.getDate() + 1); end = atTime(endDay, s.end); }
       if (start == null && end == null) continue;
       if (start != null && end != null && end <= start) continue;
-      // отметка «уже сработало сегодня» привязана к времени правила: изменили время — правило снова сработает
-      const key = s.id + '@' + today + '@' + s.streamId + ' ' + (s.start || '') + '-' + (s.end || '');
+      // отметка «уже сработало» привязана к дню начала и времени правила: изменили время — правило снова сработает
+      const key = s.id + '@' + ymd(day) + '@' + s.streamId + ' ' + (s.start || '') + '-' + (s.end || '');
       // затухание начинается заранее, чтобы ко времени «до» была тишина
       const fadeOut = all ? Math.max(1, ...config.streams.map((x) => x.fadeOut || 0)) : st.fadeOut;
       const stopAt = end != null ? Math.max(start != null ? start : -Infinity, end - fadeOut * 1000) : null;
@@ -529,6 +535,7 @@ function createApp(opts) {
         const fade = Math.max(0.5, (end - nowMs) / 1000);
         log('Schedule end: ' + (all ? 'ALL' : st.name) + ' ' + s.end + ' (fade ' + fade.toFixed(1) + 's)');
         if (all) command({ cmd: 'stopAll', fade }); else command({ cmd: 'stop', id: st.id, fade });
+      }
       }
     }
     // чистим старые отметки
@@ -721,7 +728,7 @@ function createApp(opts) {
     if (p.startsWith('/api/tracks/')) {
       const s = stream(p.slice('/api/tracks/'.length));
       if (!s) return sendJson(res, { tracks: [] }, 404);
-      return sendJson(res, { tracks: scanFolder(s.folder) });
+      return sendJson(res, { tracks: scanFolder(s.folder), missing: !!s.folder && !fs.existsSync(s.folder) });
     }
     if (p === '/api/open') { // ярлык на рабочем столе: показать окно (или открыть проигрыватель)
       app.showWindow();
