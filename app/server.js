@@ -215,7 +215,7 @@ function createApp(opts) {
   app.log = log;
 
   // --- настройки ---
-  // solo — общая настройка: играет только один поток, остальные плавно затихают (по умолчанию включено)
+  // одновременно играет только один поток (это не настраивается; поле solo осталось от старых версий)
   // hotkeys — горячие клавиши для «Стоп всё» и «Следующий трек» (у потоков — свои, в stream.hotkey)
   let config = { version: 1, port: DEFAULT_PORT, autoOpen: true, solo: true, hotkeys: { stopAll: '', next: '' }, streams: [], schedules: [] };
   // настройки + резервная копия: если config.json повреждён, берём копию, а повреждённый файл сохраняем рядом
@@ -626,7 +626,6 @@ function createApp(opts) {
       }
       case 'saveSettings':
         if (msg.autoOpen != null) config.autoOpen = !!msg.autoOpen;
-        if (msg.solo != null) config.solo = !!msg.solo;
         if (msg.hotkeys && typeof msg.hotkeys === 'object') {
           config.hotkeys = { stopAll: cleanHotkey(msg.hotkeys.stopAll), next: cleanHotkey(msg.hotkeys.next) };
         }
