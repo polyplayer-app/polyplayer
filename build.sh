@@ -12,5 +12,5 @@ node -e "const f='plugin/com.polyplayer.deck.sdPlugin/manifest.json',fs=require(
 (cd plugin && rm -f ../dist/PolyPlayer.streamDeckPlugin && zip -qr ../dist/PolyPlayer.streamDeckPlugin com.polyplayer.deck.sdPlugin)
 cp dist/PolyPlayer.streamDeckPlugin dist/win-unpacked/resources/PolyPlayer.streamDeckPlugin
 N=$(ls -d ~/.cache/electron-builder/nsis-3.0.4.1/*/)
-NSISDIR=$N $N/linux/makensis -V2 -DVERSION="$VER" installer.nsi
+NSISDIR=$N $N/linux/makensis -V2 -INPUTCHARSET UTF8 -DVERSION="$VER" installer.nsi
 ls -la dist/*.exe dist/*.streamDeckPlugin

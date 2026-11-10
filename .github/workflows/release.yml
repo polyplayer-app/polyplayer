@@ -66,7 +66,7 @@ jobs:
         shell: pwsh
         run: |
           if (-not (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { choco install nsis -y --no-progress }
-          & "${env:ProgramFiles(x86)}\NSIS\makensis.exe" /V2 /DVERSION=${{ steps.ver.outputs.version }} installer.nsi
+          & "${env:ProgramFiles(x86)}\NSIS\makensis.exe" /V2 /INPUTCHARSET UTF8 /DVERSION=${{ steps.ver.outputs.version }} installer.nsi
           if ($LASTEXITCODE -ne 0) { throw "makensis failed" }
 
       - name: Выпуск на GitHub

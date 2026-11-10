@@ -1,5 +1,7 @@
-; Установщик PolyPlayer (для текущего пользователя, права администратора не нужны).
+﻿; Установщик PolyPlayer (для текущего пользователя, права администратора не нужны).
 ; Обычный запуск — с окнами; /S — тихая установка (так ставятся обновления), после неё программа запускается сама.
+; Файл в UTF-8 с BOM, makensis вызывается с /INPUTCHARSET UTF8: без этого makensis на Windows читает
+; русский текст в кодировке системы и в окнах установщика получаются кракозябры (issue #1).
 Unicode true
 SetCompressor /SOLID lzma
 SetCompressorDictSize 64
@@ -34,11 +36,11 @@ VIAddVersionKey /LANG=1049 "LegalCopyright" "PolyPlayer"
 !define MUI_UNICON "build\icon.ico"
 !define MUI_ABORTWARNING
 !define MUI_WELCOMEPAGE_TITLE "Установка PolyPlayer ${VERSION}"
-!define MUI_WELCOMEPAGE_TEXT "Фоновая музыка в несколько потоков: расписание, плавные переходы и управление с пульта Stream Deck.$\r$\n$\r$\nЕсли PolyPlayer или старый SWP Player сейчас открыт, установщик его закроет (музыка остановится). Старый SWP Player будет удалён, его потоки и расписание перенесутся в PolyPlayer.$\r$\n$\r$\nНажмите «Установить»."
+!define MUI_WELCOMEPAGE_TEXT "Многопоточный аудиоплеер для мероприятий: плавные переходы, горячие клавиши, расписание и пульт Stream Deck.$\r$\n$\r$\nЕсли PolyPlayer сейчас открыт, установщик его закроет, и музыка остановится. Потоки и расписание сохранятся.$\r$\n$\r$\nНажмите «Установить»."
 !define MUI_FINISHPAGE_RUN
 !define MUI_FINISHPAGE_RUN_TEXT "Запустить PolyPlayer"
 !define MUI_FINISHPAGE_RUN_FUNCTION RunApp
-!define MUI_FINISHPAGE_TEXT "PolyPlayer установлен. Ярлык есть на рабочем столе и в меню «Пуск».$\r$\n$\r$\nЗакрытие окна крестиком прячет программу в значок возле часов — музыка продолжает играть."
+!define MUI_FINISHPAGE_TEXT "PolyPlayer установлен. Ярлык есть на рабочем столе и в меню «Пуск».$\r$\n$\r$\nЕсли закрыть окно программы, музыка не прервётся: PolyPlayer продолжит работать в трее — справа на панели задач, возле часов."
 
 !define MUI_PAGE_CUSTOMFUNCTION_SHOW WelcomeShow
 !insertmacro MUI_PAGE_WELCOME
