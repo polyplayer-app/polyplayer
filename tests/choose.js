@@ -43,7 +43,7 @@ const hold = async (ms) => { sd({ event: 'keyDown', action: 'com.polyplayer.deck
   sd({ event: 'willAppear', action: ACT, context: 'K', payload: { controller: 'Keypad', settings: {} } });
   await sleep(600);
   let img = lastImg();
-  check(/ВЫБЕРИТЕ/.test(img) && /ПОТОК/.test(img) && /В НАСТРОЙКАХ/.test(img) && /КНОПКИ/.test(img), 'новая кнопка: подсказка «выберите поток в настройках кнопки»');
+  check(/ВЫБЕРИТЕ/.test(img) && /ПОТОК/.test(img), 'новая кнопка: подсказка «ВЫБЕРИТЕ ПОТОК»');
   check(!/НАЖАТЬ|ДАЛЬШЕ|1\/2/.test(img), 'новая кнопка: старого режима выбора на ней нет');
 
   // панель настроек: плагин отдаёт список потоков
@@ -121,23 +121,26 @@ const hold = async (ms) => { sd({ event: 'keyDown', action: 'com.polyplayer.deck
   const sent0 = await pg.evaluate(() => window.__sent);
   check(sent0.some((m) => m.event === 'registerPropertyInspector' && m.uuid === 'PIUUID') && sent0.some((m) => m.event === 'sendToPlugin' && m.payload.t === 'getStreams'), 'панель: регистрируется и запрашивает список потоков');
   await pg.evaluate(() => window.__ws.onmessage({ data: JSON.stringify({ event: 'sendToPropertyInspector', payload: { streams: [{ id: 'a', name: 'ПЛЕЙЛИСТ 1', color: '#6A994E' }, { id: 'b', name: 'ПЛЕЙЛИСТ 2', color: '#4F86C6' }], connected: true } }) }));
-  const opts = await pg.$$eval('#stream option', (o) => o.map((x) => x.textContent));
-  check(JSON.stringify(opts) === JSON.stringify(['Не выбран', 'ПЛЕЙЛИСТ 1', 'ПЛЕЙЛИСТ 2']), 'панель: выпадающий список потоков', opts);
-  await pg.selectOption('#stream', 'b');
+  const names = () => pg.$$eval('#list .row .name', (o) => o.map((x) => x.textContent));
+  check(JSON.stringify(await names()) === JSON.stringify(['ПЛЕЙЛИСТ 1', 'ПЛЕЙЛИСТ 2']), 'панель: список потоков', await names());
+  await pg.click('#list .row[data-id="b"]');
   const sent1 = await pg.evaluate(() => window.__sent);
   check(sent1.some((m) => m.event === 'setSettings' && m.context === 'PIUUID' && m.payload.streamId === 'b'), 'панель: выбор потока сохраняется в настройках кнопки (setSettings)');
+  check(await pg.$eval('#list .row[data-id="b"]', (x) => x.classList.contains('sel')) && !(await pg.$eval('#list .row[data-id="a"]', (x) => x.classList.contains('sel'))), 'панель: выбранный поток подсвечен');
   await pg.evaluate(() => window.__ws.onmessage({ data: JSON.stringify({ event: 'didReceiveSettings', payload: { settings: { streamId: 'zzz' } } }) }));
-  const opts2 = await pg.$$eval('#stream option', (o) => o.map((x) => x.textContent));
-  check(opts2[opts2.length - 1] === 'Поток не найден' && await pg.$eval('#stream', (s) => s.value) === 'zzz', 'панель: сохранённый поток удалён — виден как «Поток не найден», настройки не затираются', opts2);
+  const n2 = await names();
+  check(n2[0] === 'Поток не найден' && n2.length === 3 && await pg.$eval('#list .row.gone', (x) => x.classList.contains('sel')), 'панель: удалённый поток — «Поток не найден», настройки не затираются', n2);
+  const before = (await pg.evaluate(() => window.__sent)).length;
+  await pg.click('#list .row.gone');
+  check((await pg.evaluate(() => window.__sent)).length === before, 'панель: нажатие на «Поток не найден» ничего не сохраняет');
   await pg.evaluate(() => window.__ws.onmessage({ data: JSON.stringify({ event: 'sendToPropertyInspector', payload: { streams: [], connected: true } }) }));
-  check(await pg.$eval('#open', (x) => !x.hidden) && /Потоков пока нет/.test(await pg.$eval('#note', (x) => x.textContent)), 'панель: потоков нет — подсказка и кнопка «Открыть PolyPlayer»');
+  check(await pg.$eval('#open', (x) => !x.hidden) && /Потоков пока нет/.test(await pg.$eval('#msgText', (x) => x.textContent)) && await pg.$eval('#list', (x) => x.hidden), 'панель: потоков нет — подсказка и кнопка «Открыть PolyPlayer»');
   await pg.evaluate(() => window.__ws.onmessage({ data: JSON.stringify({ event: 'sendToPropertyInspector', payload: { streams: [], connected: false } }) }));
-  const closed = await pg.$$eval('#stream option', (o) => o.map((x) => x.textContent));
-  check(closed.length === 1 && closed[0] === 'Запустите PolyPlayer' && await pg.$eval('#stream', (x) => x.disabled && x.value === 'zzz') && await pg.$eval('#open', (x) => !x.hidden), 'панель: программа закрыта — «Запустите PolyPlayer», выбор не затёрт, есть кнопка «Открыть PolyPlayer»', closed);
+  check(await pg.$eval('#msgText', (x) => x.textContent) === 'Запустите PolyPlayer' && await pg.$eval('#list', (x) => x.hidden) && await pg.$eval('#open', (x) => !x.hidden), 'панель: программа закрыта — «Запустите PolyPlayer» и кнопка «Открыть PolyPlayer»');
   await pg.click('#open');
   check((await pg.evaluate(() => window.__sent)).some((m) => m.event === 'sendToPlugin' && m.payload.t === 'openPanel'), 'панель: «Открыть PolyPlayer» просит плагин открыть программу');
   await pg.evaluate(() => window.__ws.onmessage({ data: JSON.stringify({ event: 'sendToPropertyInspector', payload: { streams: [{ id: 'a', name: 'ПЛЕЙЛИСТ 1', color: '#6A994E' }], connected: true } }) }));
-  check(await pg.$eval('#stream', (x) => !x.disabled) && await pg.$eval('#open', (x) => x.hidden), 'панель: программа запустилась — список снова доступен');
+  check(!(await pg.$eval('#list', (x) => x.hidden)) && await pg.$eval('#open', (x) => x.hidden), 'панель: программа запустилась — список снова виден');
   await b.close();
 
   pl.kill(); srv.close(); await app.stop();

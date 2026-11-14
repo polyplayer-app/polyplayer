@@ -4,60 +4,98 @@
 <meta charset="utf-8">
 <title>Поток PolyPlayer</title>
 <style>
-  html, body { margin: 0; background: #2d2d2d; color: #d8d8d8; font: 13px/1.4 "Segoe UI", system-ui, sans-serif; }
-  .wrap { padding: 12px 16px; }
-  label { display: block; margin: 0 0 6px; color: #9a9a9a; }
-  select, button { width: 100%; box-sizing: border-box; padding: 6px 8px; font: inherit; color: #d8d8d8; background: #3d3d3d; border: 1px solid #4a4a4a; border-radius: 3px; }
-  select:focus, button:focus { outline: 1px solid #5b9bff; }
-  button { margin-top: 10px; cursor: pointer; }
-  button:hover { background: #484848; }
-  .note { margin: 10px 0 0; color: #9a9a9a; }
+  @font-face { font-family: Inter; src: url("fonts/Inter-cyrillic.woff2") format("woff2"); font-weight: 100 900; unicode-range: U+0400-045F, U+0490-0491, U+2116; }
+  @font-face { font-family: Inter; src: url("fonts/Inter-latin.woff2") format("woff2"); font-weight: 100 900; }
+  :root { --bg: #0C0D10; --s1: #14161B; --s2: #1B1E25; --s3: #23272F; --line: rgba(255,255,255,.07); --tx: #ECEDEF; --mu: #8B909A; --mu2: #5F646D; --acc: #FF6A4D; --acc-grad: linear-gradient(135deg, #FF9A5C, #F0484E); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--tx); font: 13.5px/1.45 Inter, "Segoe UI", system-ui, sans-serif; letter-spacing: -.005em; }
+  body { background: radial-gradient(520px 220px at 10% -10%, rgba(255,106,77,.13), transparent 60%), var(--bg); background-attachment: fixed; }
   [hidden] { display: none !important; }
+  .wrap { padding: 14px 16px 16px; max-width: 520px; }
+  .head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .head img { width: 26px; height: 26px; border-radius: 8px; box-shadow: 0 6px 16px -6px rgba(229,72,77,.65), 0 0 0 1px rgba(255,255,255,.06); }
+  .head b { font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
+  .head span { margin-left: auto; font-size: 11.5px; color: var(--mu); }
+  #list { display: flex; flex-direction: column; gap: 4px; max-height: 300px; overflow-y: auto; margin: 0 -4px; padding: 0 4px; }
+  #list::-webkit-scrollbar { width: 8px; }
+  #list::-webkit-scrollbar-thumb { background: var(--s3); border-radius: 4px; }
+  .row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 14px 8px 8px; border-radius: 14px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.045); color: inherit; font: inherit; text-align: left; cursor: pointer; backdrop-filter: blur(12px); box-shadow: 0 8px 20px -10px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.06); transition: background .15s, border-color .15s, box-shadow .15s, transform .15s; }
+  .row:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); }
+  .row:active { transform: scale(.99); }
+  .row:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
+  .cover { flex: none; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: rgba(255,255,255,.07); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); transition: background .15s; }
+  .cover svg { width: 13px; height: 13px; fill: var(--mu); transition: fill .15s; }
+  .row:hover .cover svg { fill: var(--tx); }
+  .name { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .check { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--acc-grad); display: none; place-items: center; }
+  .check svg { width: 10px; height: 10px; stroke: #fff; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .row.sel { background: linear-gradient(160deg, rgba(255,106,77,.18), rgba(255,106,77,.06)); border-color: rgba(255,106,77,.5); box-shadow: 0 10px 26px -12px rgba(240,72,78,.7), inset 0 1px 0 rgba(255,255,255,.08); }
+  .row.sel .check { display: grid; }
+  .row.sel .cover { background: var(--acc-grad); box-shadow: none; }
+  .row.sel .cover svg { fill: #fff; }
+  .row.gone { cursor: default; background: rgba(255,255,255,.03); border-style: dashed; border-color: rgba(255,255,255,.14); box-shadow: none; }
+  .row.gone .cover { background: rgba(255,255,255,.05); }
+  .row.gone .cover svg { fill: var(--mu2); }
+  .row.gone .name { color: var(--mu); font-weight: 500; }
+  .row.gone .check { background: rgba(255,255,255,.12); }
+  .msg { display: flex; align-items: center; gap: 10px; padding: 14px; border-radius: 14px; background: var(--s1); border: 1px solid var(--line); color: var(--mu); }
+  .msg i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 0 4px rgba(255,106,77,.18); }
+  .cta { display: block; width: 100%; margin-top: 10px; padding: 9px 14px; border: 0; border-radius: 999px; background: var(--acc-grad); color: #fff; font: inherit; font-weight: 600; cursor: pointer; box-shadow: 0 8px 22px -10px rgba(240,72,78,.8); }
+  .cta:hover { filter: brightness(1.08); }
+  .cta:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <label for="stream">Поток</label>
-  <select id="stream"></select>
-  <p class="note" id="note" hidden></p>
-  <button id="open" type="button" hidden>Открыть PolyPlayer</button>
+  <div class="head"><img src="logo.png" alt=""><b>PolyPlayer</b><span>Поток для кнопки</span></div>
+  <div id="list" hidden></div>
+  <div class="msg" id="msg" hidden><i></i><span id="msgText"></span></div>
+  <button class="cta" id="open" type="button" hidden>Открыть PolyPlayer</button>
 </div>
 <script>
 var ws = null, uuid = '', action = '';
 var settings = {};
 var data = { streams: [], connected: false };
-var sel = document.getElementById('stream');
-var note = document.getElementById('note');
+var listEl = document.getElementById('list');
+var msgEl = document.getElementById('msg');
+var msgText = document.getElementById('msgText');
 var openBtn = document.getElementById('open');
+var PLAY = '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>';
+var CHECK = '<span class="check"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>';
 
 function send(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+function row(id, name, cls) {
+  return '<button type="button" class="row ' + cls + '" data-id="' + esc(id) + '">' +
+    '<span class="cover">' + PLAY + '</span><span class="name">' + esc(name) + '</span>' + CHECK + '</button>';
+}
 
 function render() {
   var cur = settings.streamId || '';
-  sel.innerHTML = '';
-  function add(value, text) { var o = document.createElement('option'); o.value = value; o.textContent = text; sel.appendChild(o); }
-  var text = '';
-  if (!data.connected) {
-    // программа закрыта: список недоступен, выбор не трогаем
-    add(cur, 'Запустите PolyPlayer');
-    sel.disabled = true;
-  } else {
-    sel.disabled = false;
-    add('', 'Не выбран');
-    var found = false;
-    data.streams.forEach(function (s) { add(s.id, s.name); if (s.id === cur) found = true; });
-    // сохранённого потока нет в списке (удалён) — не затираем выбор молча
-    if (cur && !found) add(cur, 'Поток не найден');
-    if (!data.streams.length) text = 'Потоков пока нет. Создайте поток в программе PolyPlayer.';
+  var text = '', showList = false;
+  if (!data.connected) text = 'Запустите PolyPlayer';
+  else if (!data.streams.length) text = 'Потоков пока нет. Создайте поток в программе PolyPlayer.';
+  else showList = true;
+  listEl.hidden = !showList;
+  if (showList) {
+    var html = '', found = false;
+    data.streams.forEach(function (s) { if (s.id === cur) found = true; });
+    // сохранённого потока нет в списке (удалён) — показываем это, а не молча выбираем другой
+    if (cur && !found) html += row(cur, 'Поток не найден', 'sel gone');
+    data.streams.forEach(function (s) { html += row(s.id, s.name, s.id === cur ? 'sel' : ''); });
+    listEl.innerHTML = html;
   }
-  sel.value = cur;
-  note.textContent = text; note.hidden = !text;
-  openBtn.hidden = data.connected && data.streams.length > 0;
+  msgEl.hidden = !text; msgText.textContent = text;
+  openBtn.hidden = showList;
 }
 
-sel.addEventListener('change', function () {
-  settings = { streamId: sel.value };
+listEl.addEventListener('click', function (e) {
+  var b = e.target.closest ? e.target.closest('.row') : null;
+  if (!b || b.classList.contains('gone')) return;
+  settings = { streamId: b.getAttribute('data-id') };
   send({ event: 'setSettings', context: uuid, payload: settings });
+  render();
 });
 openBtn.addEventListener('click', function () { send({ event: 'sendToPlugin', action: action, context: uuid, payload: { t: 'openPanel' } }); });
 

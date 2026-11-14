@@ -170,10 +170,12 @@ const svgUri = (svg) => 'data:image/svg+xml;charset=utf8,' + svg;
 
 function streamKeySvg(s, rt) {
   const W = 144;
-  if (!s) {
-    return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144"><rect width="144" height="144" fill="#2B2B2B"/>' +
-      textBlock(['ВЫБЕРИТЕ', 'ПОТОК'], 72, 14, 84, 124, 28, '#F2E6CC') +
-      textBlock(['В НАСТРОЙКАХ', 'КНОПКИ'], 72, 90, 132, 124, 15, '#8E8E8E') + '</svg>');
+  if (!s) { // поток не выбран: как «След. трек» — значок сверху, подпись снизу
+    const c = '#FF6A4D';
+    return svgUri('<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144"><rect width="144" height="144" fill="#262626"/><rect width="144" height="10" fill="' + c + '"/>' +
+      '<rect x="26" y="30" width="54" height="8" rx="4" fill="' + c + '"/><rect x="26" y="48" width="54" height="8" rx="4" fill="' + c + '"/><rect x="26" y="66" width="32" height="8" rx="4" fill="' + c + '"/>' +
+      '<path d="M92 44 L118 60 L92 76 Z" fill="' + c + '"/>' +
+      textBlock(['ВЫБЕРИТЕ', 'ПОТОК'], 72, 86, 136, 128, 24, '#F2E6CC') + '</svg>');
   }
   const st = (rt && rt.state) || 'stopped';
   const on = st === 'playing';
