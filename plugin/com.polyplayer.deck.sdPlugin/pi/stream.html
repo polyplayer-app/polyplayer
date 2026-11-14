@@ -36,17 +36,23 @@ function render() {
   var cur = settings.streamId || '';
   sel.innerHTML = '';
   function add(value, text) { var o = document.createElement('option'); o.value = value; o.textContent = text; sel.appendChild(o); }
-  add('', 'Не выбран');
-  var found = false;
-  data.streams.forEach(function (s) { add(s.id, s.name); if (s.id === cur) found = true; });
-  // сохранённого потока нет в списке (удалён или программа не запущена) — не затираем выбор молча
-  if (cur && !found) add(cur, data.connected ? 'Поток не найден' : 'Список потоков не загружен');
+  var text = '';
+  if (!data.connected) {
+    // программа закрыта: список недоступен, выбор не трогаем
+    add(cur, 'Запустите PolyPlayer');
+    sel.disabled = true;
+  } else {
+    sel.disabled = false;
+    add('', 'Не выбран');
+    var found = false;
+    data.streams.forEach(function (s) { add(s.id, s.name); if (s.id === cur) found = true; });
+    // сохранённого потока нет в списке (удалён) — не затираем выбор молча
+    if (cur && !found) add(cur, 'Поток не найден');
+    if (!data.streams.length) text = 'Потоков пока нет. Создайте поток в программе PolyPlayer.';
+  }
   sel.value = cur;
-  var text = '', showBtn = false;
-  if (!data.connected) text = 'PolyPlayer не запущена. Список потоков появится, когда программа откроется.';
-  else if (!data.streams.length) { text = 'Потоков пока нет. Создайте поток в программе PolyPlayer.'; showBtn = true; }
   note.textContent = text; note.hidden = !text;
-  openBtn.hidden = !showBtn;
+  openBtn.hidden = data.connected && data.streams.length > 0;
 }
 
 sel.addEventListener('change', function () {
