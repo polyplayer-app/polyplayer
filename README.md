@@ -25,7 +25,7 @@
 ## Для разработчиков
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — стек, устройство кода, сборка и выпуск, тесты.
-- [STATUS.md](STATUS.md) — функциональность, история разработки, текущее состояние и планы.
+- [STATUS.md](STATUS.md) — текущее состояние и планы; [dev/FEATURES.md](dev/FEATURES.md) — функциональность; [dev/HISTORY.md](dev/HISTORY.md) — история разработки.
 
 Выпуск собирается автоматически (GitHub Actions): когда в `main` попадает новая версия в `package.json`, GitHub собирает установщик и плагин и публикует выпуск `vX.Y.Z`. Автотесты — `tests/run.sh`.
 
