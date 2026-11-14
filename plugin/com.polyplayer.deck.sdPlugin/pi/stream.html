@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Поток PolyPlayer</title>
+<style>
+  html, body { margin: 0; background: #2d2d2d; color: #d8d8d8; font: 13px/1.4 "Segoe UI", system-ui, sans-serif; }
+  .wrap { padding: 12px 16px; }
+  label { display: block; margin: 0 0 6px; color: #9a9a9a; }
+  select, button { width: 100%; box-sizing: border-box; padding: 6px 8px; font: inherit; color: #d8d8d8; background: #3d3d3d; border: 1px solid #4a4a4a; border-radius: 3px; }
+  select:focus, button:focus { outline: 1px solid #5b9bff; }
+  button { margin-top: 10px; cursor: pointer; }
+  button:hover { background: #484848; }
+  .note { margin: 10px 0 0; color: #9a9a9a; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <label for="stream">Поток</label>
+  <select id="stream"></select>
+  <p class="note" id="note" hidden></p>
+  <button id="open" type="button" hidden>Открыть PolyPlayer</button>
+</div>
+<script>
+var ws = null, uuid = '', action = '';
+var settings = {};
+var data = { streams: [], connected: false };
+var sel = document.getElementById('stream');
+var note = document.getElementById('note');
+var openBtn = document.getElementById('open');
+
+function send(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+
+function render() {
+  var cur = settings.streamId || '';
+  sel.innerHTML = '';
+  function add(value, text) { var o = document.createElement('option'); o.value = value; o.textContent = text; sel.appendChild(o); }
+  add('', 'Не выбран');
+  var found = false;
+  data.streams.forEach(function (s) { add(s.id, s.name); if (s.id === cur) found = true; });
+  // сохранённого потока нет в списке (удалён или программа не запущена) — не затираем выбор молча
+  if (cur && !found) add(cur, data.connected ? 'Поток не найден' : 'Список потоков не загружен');
+  sel.value = cur;
+  var text = '', showBtn = false;
+  if (!data.connected) text = 'PolyPlayer не запущена. Список потоков появится, когда программа откроется.';
+  else if (!data.streams.length) { text = 'Потоков пока нет. Создайте поток в программе PolyPlayer.'; showBtn = true; }
+  note.textContent = text; note.hidden = !text;
+  openBtn.hidden = !showBtn;
+}
+
+sel.addEventListener('change', function () {
+  settings = { streamId: sel.value };
+  send({ event: 'setSettings', context: uuid, payload: settings });
+});
+openBtn.addEventListener('click', function () { send({ event: 'sendToPlugin', action: action, context: uuid, payload: { t: 'openPanel' } }); });
+
+function connectElgatoStreamDeckSocket(port, inUuid, registerEvent, info, actionInfo) {
+  uuid = inUuid;
+  try { var ai = JSON.parse(actionInfo); action = ai.action || ''; settings = (ai.payload && ai.payload.settings) || {}; } catch (e) { /* без настроек */ }
+  ws = new WebSocket('ws://127.0.0.1:' + port);
+  ws.onopen = function () {
+    send({ event: registerEvent, uuid: uuid });
+    send({ event: 'getSettings', context: uuid });
+    send({ event: 'sendToPlugin', action: action, context: uuid, payload: { t: 'getStreams' } });
+  };
+  ws.onmessage = function (e) {
+    var m; try { m = JSON.parse(e.data); } catch (x) { return; }
+    if (m.event === 'didReceiveSettings') { settings = (m.payload && m.payload.settings) || {}; render(); }
+    else if (m.event === 'sendToPropertyInspector' && m.payload && m.payload.streams) { data = m.payload; render(); }
+  };
+}
+render();
+</script>
+</body>
+</html>

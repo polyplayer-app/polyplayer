@@ -6,7 +6,7 @@ const OUT = path.join(__dirname, '..', 'docs', 'img');
 const src = fs.readFileSync(path.join(BIN, 'plugin.js'), 'utf8');
 const grab = (n) => { const i = src.indexOf('function ' + n + '('); let d = 0; const j = src.indexOf('{', i); for (let k = j; k < src.length; k++) { if (src[k] === '{') d++; else if (src[k] === '}') { d--; if (!d) return src.slice(i, k + 1); } } };
 const KeyName = require(path.join(BIN, 'keyname.js'));
-eval(['xml', 'textBlock', 'glyph', 'streamKeySvg', 'chooseKeySvg', 'chooseHintSvg', 'holdSvg', 'stopKeySvg', 'nextKeySvg'].map(grab).join('\n') + '\nvar svgUri = (s) => s;');
+eval(['xml', 'textBlock', 'glyph', 'streamKeySvg', 'holdSvg', 'stopKeySvg', 'nextKeySvg'].map(grab).join('\n') + '\nvar svgUri = (s) => s;');
 const P1 = { id: 'a', name: 'ВХОД', color: '#E9B44C', volume: 70 };
 const P2 = { id: 'b', name: 'ПЕРЕРЫВ', color: '#2BB3A3', volume: 60 };
 const P3 = { id: 'c', name: 'ФИНАЛ', color: '#4F86C6', volume: 65 };

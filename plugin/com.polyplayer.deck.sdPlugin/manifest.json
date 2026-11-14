@@ -30,7 +30,8 @@
       "UUID": "com.polyplayer.deck.stream",
       "Name": "Поток",
       "Icon": "imgs/action_stream",
-      "Tooltip": "Новая кнопка сама предлагает поток: нажать — следующий, держать 1 с — выбрать. Потом: нажать — пуск/пауза, держать 1 с — стоп, держать 3 с — сменить поток.",
+      "Tooltip": "Кнопка потока. Поток выбирается в настройках кнопки. Нажать — пуск или пауза, держать 1 с — стоп.",
+      "PropertyInspectorPath": "pi/stream.html",
       "Controllers": [
         "Keypad",
         "Encoder"

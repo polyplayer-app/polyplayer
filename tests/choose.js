@@ -1,8 +1,10 @@
-// Плагин: выбор потока на кнопке (нажать — следующий, держать 1 с — выбрать) и подсказки при удержании.
+// Плагин: поток назначается в панели настроек кнопки (список из PolyPlayer); пустая кнопка — подсказка; нажатие и удержание.
 const net = require('net'); const crypto = require('crypto'); const fs = require('fs'); const os = require('os'); const path = require('path');
 const { spawn } = require('child_process');
+const { chromium } = require('playwright');
 const { createApp } = require('../app/server.js');
-const PLUGIN = path.join(__dirname, '..', 'plugin', 'com.polyplayer.deck.sdPlugin', 'bin', 'plugin.js');
+const SDP = path.join(__dirname, '..', 'plugin', 'com.polyplayer.deck.sdPlugin');
+const PLUGIN = path.join(SDP, 'bin', 'plugin.js');
 const D = fs.mkdtempSync(path.join(os.tmpdir(), 'pp-ch-'));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let fails = 0;
@@ -26,37 +28,113 @@ const lastImg = () => { const m = [...rx].reverse().find((x) => x.event === 'set
 const imgsSince = (n) => rx.slice(n).filter((x) => x.event === 'setImage' && x.context === 'K').map((x) => decodeURIComponent(x.payload.image));
 const hold = async (ms) => { sd({ event: 'keyDown', action: 'com.polyplayer.deck.stream', context: 'K', payload: {} }); await sleep(ms); sd({ event: 'keyUp', action: 'com.polyplayer.deck.stream', context: 'K', payload: {} }); await sleep(300); };
 (async () => {
-  const app = createApp({ dataDir: D, port: 7870 }); await app.start();
+  // манифест: у действия «Поток» есть панель настроек, файл на месте
+  const man = JSON.parse(fs.readFileSync(path.join(SDP, 'manifest.json'), 'utf8'));
+  const act = man.Actions.find((a) => a.UUID === 'com.polyplayer.deck.stream');
+  check(act && act.PropertyInspectorPath === 'pi/stream.html' && fs.existsSync(path.join(SDP, act.PropertyInspectorPath)), 'manifest: «Поток» → PropertyInspectorPath pi/stream.html (файл есть)');
+  check(!/выбрать|сменить/.test(act.Tooltip) || /настройк/.test(act.Tooltip), 'manifest: подсказка действия не про выбор на кнопке', act.Tooltip);
+
+  const launched = [];
+  const app = createApp({ dataDir: D, port: 7870, launchHook: (hidden) => launched.push(hidden) }); await app.start();
   await new Promise((r) => srv.listen(0, r));
   const pl = spawn(process.execPath, [PLUGIN, '-port', String(srv.address().port), '-pluginUUID', 'U', '-registerEvent', 'registerPlugin', '-info', '{}'], { env: Object.assign({}, process.env, { POLYPLAYER_DATA_DIR: D }) });
   await sleep(1200);
-  sd({ event: 'willAppear', action: 'com.polyplayer.deck.stream', context: 'K', payload: { controller: 'Keypad', settings: {} } });
-  await sleep(2600);
-  check(rx.some((x) => x.event === 'setImage' && /1\/2/.test(decodeURIComponent(x.payload.image))) && rx.some((x) => x.event === 'setImage' && /НАЖАТЬ/.test(decodeURIComponent(x.payload.image)) && /ВЫБРАТЬ/.test(decodeURIComponent(x.payload.image))), 'new key: choose mode 1/2 + hint «нажать — дальше / держать — выбрать»');
-  await hold(100);
-  check(/2\/2/.test(lastImg()), 'short press → next stream immediately (2/2)');
+  const ACT = 'com.polyplayer.deck.stream';
+  sd({ event: 'willAppear', action: ACT, context: 'K', payload: { controller: 'Keypad', settings: {} } });
+  await sleep(600);
+  let img = lastImg();
+  check(/ВЫБЕРИТЕ/.test(img) && /ПОТОК/.test(img) && /В НАСТРОЙКАХ/.test(img) && /КНОПКИ/.test(img), 'новая кнопка: подсказка «выберите поток в настройках кнопки»');
+  check(!/НАЖАТЬ|ДАЛЬШЕ|1\/2/.test(img), 'новая кнопка: старого режима выбора на ней нет');
+
+  // панель настроек: плагин отдаёт список потоков
   let n = rx.length;
-  await hold(1300);
-  const frames = imgsSince(n);
-  check(frames.some((f) => /ВЫБРАТЬ…/.test(f)), 'holding shows «ВЫБРАТЬ…» progress');
-  const set = [...rx].reverse().find((x) => x.event === 'setSettings' && x.context === 'K');
-  check(set && set.payload.streamId === 'b', 'hold 1 s → selects shown stream (ПЛЕЙЛИСТ 2)', set && set.payload);
-  check(rx.slice(n).some((x) => x.event === 'showOk'), 'showOk after select');
-  check(!/2\/2|1\/2/.test(lastImg()) && /ПЛЕЙЛИСТ/.test(lastImg()), 'key now shows the stream (normal mode)');
+  sd({ event: 'propertyInspectorDidAppear', action: ACT, context: 'K', payload: {} });
+  await sleep(300);
+  const pi = rx.slice(n).find((x) => x.event === 'sendToPropertyInspector' && x.context === 'K');
+  check(pi && pi.payload.streams.length === 2 && pi.payload.streams[0].id === 'a' && pi.payload.streams[1].name === 'ПЛЕЙЛИСТ 2', 'панель настроек получает список потоков', pi && pi.payload.streams);
+  check(pi && pi.payload.connected === true, 'панель настроек знает, что программа на связи');
+  n = rx.length;
+  sd({ event: 'sendToPlugin', action: ACT, context: 'K', payload: { t: 'getStreams' } });
+  await sleep(300);
+  check(rx.slice(n).some((x) => x.event === 'sendToPropertyInspector'), 'getStreams → список потоков');
+
+  // пользователь выбрал поток в панели → Stream Deck присылает настройки
+  n = rx.length;
+  sd({ event: 'didReceiveSettings', action: ACT, context: 'K', payload: { settings: { streamId: 'b' } } });
+  await sleep(300);
+  img = lastImg();
+  check(/ПЛЕЙЛИСТ/.test(img) && /2/.test(img) && !/ВЫБЕРИТЕ/.test(img), 'выбран поток в панели → кнопка показывает ПЛЕЙЛИСТ 2');
+
+  // нажать — пуск/пауза (проигрыватель закрыт → программа запускается в трей, команда ждёт в очереди)
+  await hold(100); await sleep(500);
+  check(launched.length === 1 && launched[0] === true, 'нажатие на кнопку потока → команда дошла до программы (она запустилась в трей)', launched);
+
+  // держать: подсказки стоп; 3 с больше ничего не значат
   n = rx.length;
   await hold(1500);
   const f2 = imgsSince(n);
-  check(f2.some((f) => />СТОП</.test(f) && /ДЕРЖИТЕ/.test(f)) && f2.some((f) => /ОТПУСТИТЕ —/.test(f) && />СТОП</.test(f)), 'hold 1.5 s: «СТОП · ДЕРЖИТЕ» then «ОТПУСТИТЕ — СТОП»');
-  check(!/1\/2|2\/2/.test(lastImg()), 'released at 1.5 s → still normal mode (stop)');
+  check(f2.some((f) => />СТОП</.test(f) && /ДЕРЖИТЕ/.test(f)) && f2.some((f) => /ОТПУСТИТЕ —/.test(f) && />СТОП</.test(f)), 'держать 1,5 с: «СТОП · ДЕРЖИТЕ», затем «ОТПУСТИТЕ — СТОП»');
   n = rx.length;
-  await hold(3300);
-  check(imgsSince(n).some((f) => /ВЫБОР/.test(f) && /ПОТОКА/.test(f)), 'hold 3 s: «ОТПУСТИТЕ — ВЫБОР ПОТОКА»');
-  check(/2\/2/.test(lastImg()), 'released after 3 s → choose mode starting at current stream (2/2)', lastImg().slice(0, 0));
-  await hold(100);
-  check(/1\/2/.test(lastImg()), 'press → 1/2');
-  await hold(1200);
-  const set2 = [...rx].reverse().find((x) => x.event === 'setSettings' && x.context === 'K');
-  check(set2 && set2.payload.streamId === 'a', 'hold → ПЛЕЙЛИСТ 1 selected');
+  await hold(3400);
+  const f3 = imgsSince(n);
+  check(!f3.some((f) => /ВЫБОР|ВЫБРАТЬ/.test(f)), 'держать 3 с: режима выбора потока нет');
+  check(!rx.some((x) => x.event === 'setSettings') && /ПЛЕЙЛИСТ/.test(lastImg()) && !/ВЫБЕРИТЕ/.test(lastImg()), 'после долгого удержания кнопка осталась на своём потоке, настройки не менялись');
+
+  // сменили поток в панели → кнопка перерисована
+  sd({ event: 'didReceiveSettings', action: ACT, context: 'K', payload: { settings: { streamId: 'a' } } });
+  await sleep(300);
+  check(/ПЛЕЙЛИСТ/.test(lastImg()) && /1/.test(lastImg()), 'смена потока в панели → кнопка показывает ПЛЕЙЛИСТ 1');
+
+  // удалённый поток: снова подсказка
+  sd({ event: 'didReceiveSettings', action: ACT, context: 'K', payload: { settings: { streamId: 'zzz' } } });
+  await sleep(300);
+  check(/ВЫБЕРИТЕ/.test(lastImg()), 'поток удалён → на кнопке снова подсказка');
+
+  // нажатие и удержание на кнопке без потока ничего не назначают
+  await hold(100); await hold(1300); await hold(3300);
+  check(!rx.some((x) => x.event === 'setSettings'), 'на кнопке без потока нажатие и удержание не назначают поток');
+  check(/ВЫБЕРИТЕ/.test(lastImg()), 'кнопка без потока осталась с подсказкой');
+
+  // регулятор Stream Deck +
+  sd({ event: 'willAppear', action: ACT, context: 'E', payload: { controller: 'Encoder', settings: { streamId: 'a' } } });
+  await sleep(300);
+  n = rx.length;
+  sd({ event: 'dialRotate', action: ACT, context: 'E', payload: { ticks: 3 } });
+  await sleep(400);
+  const e1 = JSON.parse(await (await fetch('http://127.0.0.1:7870/api/state')).text());
+  check(e1.config.streams.find((s) => s.id === 'a').volume === 66, 'регулятор: поворот меняет громкость (+2 за щелчок)', e1.config.streams.find((s) => s.id === 'a').volume);
+  sd({ event: 'willAppear', action: ACT, context: 'E2', payload: { controller: 'Encoder', settings: {} } });
+  await sleep(300);
+  const fb = [...rx].reverse().find((x) => x.event === 'setFeedback' && x.context === 'E2');
+  check(fb && /настройках/.test(fb.payload.value), 'регулятор без потока: подсказка про настройки', fb && fb.payload.value);
+
+  // сама панель настроек в Chromium, с поддельным сокетом Stream Deck
+  const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 400, height: 300 } });
+  await pg.addInitScript(() => {
+    window.__sent = [];
+    window.WebSocket = class { constructor(u) { window.__ws = this; this.readyState = 1; setTimeout(() => this.onopen && this.onopen(), 0); }
+      send(d) { window.__sent.push(JSON.parse(d)); } };
+  });
+  await pg.goto('file://' + path.join(SDP, 'pi', 'stream.html'));
+  await pg.evaluate(() => connectElgatoStreamDeckSocket(28196, 'PIUUID', 'registerPropertyInspector', '{}', JSON.stringify({ action: 'com.polyplayer.deck.stream', context: 'K', payload: { settings: {} } })));
+  await pg.waitForTimeout(100);
+  const sent0 = await pg.evaluate(() => window.__sent);
+  check(sent0.some((m) => m.event === 'registerPropertyInspector' && m.uuid === 'PIUUID') && sent0.some((m) => m.event === 'sendToPlugin' && m.payload.t === 'getStreams'), 'панель: регистрируется и запрашивает список потоков');
+  await pg.evaluate(() => window.__ws.onmessage({ data: JSON.stringify({ event: 'sendToPropertyInspector', payload: { streams: [{ id: 'a', name: 'ПЛЕЙЛИСТ 1', color: '#6A994E' }, { id: 'b', name: 'ПЛЕЙЛИСТ 2', color: '#4F86C6' }], connected: true } }) }));
+  const opts = await pg.$$eval('#stream option', (o) => o.map((x) => x.textContent));
+  check(JSON.stringify(opts) === JSON.stringify(['Не выбран', 'ПЛЕЙЛИСТ 1', 'ПЛЕЙЛИСТ 2']), 'панель: выпадающий список потоков', opts);
+  await pg.selectOption('#stream', 'b');
+  const sent1 = await pg.evaluate(() => window.__sent);
+  check(sent1.some((m) => m.event === 'setSettings' && m.context === 'PIUUID' && m.payload.streamId === 'b'), 'панель: выбор потока сохраняется в настройках кнопки (setSettings)');
+  await pg.evaluate(() => window.__ws.onmessage({ data: JSON.stringify({ event: 'didReceiveSettings', payload: { settings: { streamId: 'zzz' } } }) }));
+  const opts2 = await pg.$$eval('#stream option', (o) => o.map((x) => x.textContent));
+  check(opts2[opts2.length - 1] === 'Поток не найден' && await pg.$eval('#stream', (s) => s.value) === 'zzz', 'панель: сохранённый поток удалён — виден как «Поток не найден», настройки не затираются', opts2);
+  await pg.evaluate(() => window.__ws.onmessage({ data: JSON.stringify({ event: 'sendToPropertyInspector', payload: { streams: [], connected: true } }) }));
+  check(await pg.$eval('#open', (x) => !x.hidden) && /Потоков пока нет/.test(await pg.$eval('#note', (x) => x.textContent)), 'панель: потоков нет — подсказка и кнопка «Открыть PolyPlayer»');
+  await pg.evaluate(() => window.__ws.onmessage({ data: JSON.stringify({ event: 'sendToPropertyInspector', payload: { streams: [], connected: false } }) }));
+  check(/не запущена/.test(await pg.$eval('#note', (x) => x.textContent)) && await pg.$eval('#open', (x) => x.hidden), 'панель: программа не запущена — подсказка');
+  await b.close();
+
   pl.kill(); srv.close(); await app.stop();
   console.log(fails ? fails + ' FAILED' : 'ALL PASSED'); process.exit(fails ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(2); });
